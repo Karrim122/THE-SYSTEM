@@ -2,11 +2,12 @@ import streamlit as st
 from datetime import datetime
 
 def get_default_data():
-    """Returns a baseline status data structure."""
+    """Returns a baseline status data structure compatible with stats_engine."""
     return {
         "hp": 50.0,
         "max_hp": 50.0,
         "last_synced": None,
+        "overall_level_offset": 0,
         "stats": {
             "Discipline": {"level": 1, "progress": 0.0},
             "Deep Focus": {"level": 1, "progress": 0.0},
@@ -14,11 +15,12 @@ def get_default_data():
             "Intelligence": {"level": 1, "progress": 0.0},
             "Hacking": {"level": 1, "progress": 0.0},
         },
+        "tasks": {},
         "log": []
     }
 
 def load_data():
-    """Loads state from Streamlit Session State instead of local JSON file."""
+    """Loads state from Streamlit Session State."""
     if "app_data" not in st.session_state:
         st.session_state["app_data"] = get_default_data()
     return st.session_state["app_data"]
