@@ -1,20 +1,14 @@
 import streamlit as st
 from datetime import datetime
+import stats_engine
 
 def get_default_data():
-    """Returns a baseline status data structure compatible with stats_engine."""
+    """Initializes a baseline status data structure compatible with stats_engine."""
     return {
         "hp": 50.0,
         "max_hp": 50.0,
         "last_synced": None,
-        "overall_level_offset": 0,
-        "stats": {
-            "Discipline": {"level": 1, "progress": 0.0},
-            "Deep Focus": {"level": 1, "progress": 0.0},
-            "Activity": {"level": 1, "progress": 0.0},
-            "Intelligence": {"level": 1, "progress": 0.0},
-            "Hacking": {"level": 1, "progress": 0.0},
-        },
+        "stats": stats_engine.new_stat_block(),
         "tasks": {},
         "log": []
     }
@@ -34,4 +28,4 @@ def add_log(data, message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_entry = f"[{timestamp}] {message}"
     data["log"].insert(0, log_entry)
-    data["log"] = data["log"][:50]  # Keep latest 50 entries
+    data["log"] = data["log"][:50]  # Retain last 50 log records
