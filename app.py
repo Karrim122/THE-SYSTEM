@@ -1,4 +1,5 @@
 import time
+from datetime import date
 import streamlit as st
 import data_store
 import stats_engine
@@ -74,12 +75,12 @@ st.markdown(
 )
 
 # ---------------------------------------------------------
-# Data Store Initialization
+# Load Data Store
 # ---------------------------------------------------------
 app_data = data_store.load_data()
 
 # ---------------------------------------------------------
-# Habitica Synchronization Function
+# Habitica Sync Logic with stats_engine Integration
 # ---------------------------------------------------------
 def sync_habitica():
     try:
@@ -91,35 +92,104 @@ def sync_habitica():
             return
 
         client = HabiticaClient(user_id, api_token)
+        
+        # 1. Fetch User Data & Health Status
         user_info = client.get_user()
         stats_data = user_info.get("stats", {})
-
         app_data["hp"] = float(stats_data.get("hp", 50))
         app_data["max_hp"] = float(stats_data.get("maxHP", 50))
+
+        # 2. Map Tags
+        tags = client.get_tags()
+        tag_id_to_name = {t["id"]: t["name"] for t in tags}
+
+        # 3. Fetch Tasks
+        habits = client.get_tasks("habits")
+        dailies = client.get_tasks("dailys")
+        active_todos = client.get_tasks("todos")
+        completed_todos = client.get_tasks("completedTodos")
+        todos = active_todos + completed_todos
+
+        today_str = date.today().isoformat()
+
+        # --- Process Habits ---
+        for task in habits:
+            stat = stats_engine.match_stat_from_tags(task.get("tags"), tag_id_to_name)
+            if not stat:
+                continue
+            task_id = task["id"]
+            counter_up = task.get("counterUp", 0) or 0
+            counter_down = task.get("counterDown", 0) or 0
+
+            prev = app_data["tasks"].get(task_id, {"counterUp": 0, "counterDown": 0})
+            prev_up = prev.get("counterUp", 0)
+            prev_down = prev.get("counterDown", 0)
+
+            new_up = counter_up - prev_up if counter_up >= prev_up else counter_up
+            if new_up > 0:
+                difficulty = stats_engine.priority_to_difficulty(task.get("priority", 1))
+                increment = stats_engine.DIFFICULTY_INCREMENT[difficulty] * new_up
+                levels = stats_engine.apply_progress(app_data["stats"], stat, increment, direction="up")
+                data_store.add_log(app_data, f"Habit '{task.get('text')}' x{new_up} -> +{stat} EXP")
+
+            new_down = counter_down - prev_down if counter_down >= prev_down else counter_down
+            if new_down > 0:
+                difficulty = stats_engine.priority_to_difficulty(task.get("priority", 1))
+                increment = stats_engine.DIFFICULTY_INCREMENT[difficulty] * new_down
+                stats_engine.apply_progress(app_data["stats"], stat, increment, direction="down")
+                data_store.add_log(app_data, f"Penalty '{task.get('text')}' x{new_down} -> -{stat} EXP")
+
+            app_data["tasks"][task_id] = {"counterUp": counter_up, "counterDown": counter_down}
+
+        # --- Process Dailies ---
+        for task in dailies:
+            stat = stats_engine.match_stat_from_tags(task.get("tags"), tag_id_to_name)
+            if not stat:
+                continue
+            task_id = task["id"]
+            completed = bool(task.get("completed"))
+            prev = app_data["tasks"].get(task_id, {})
+            
+            if completed and prev.get("lastCreditedDate") != today_str:
+                difficulty = stats_engine.priority_to_difficulty(task.get("priority", 1))
+                increment = stats_engine.DIFFICULTY_INCREMENT[difficulty]
+                stats_engine.apply_progress(app_data["stats"], stat, increment, direction="up")
+                data_store.add_log(app_data, f"Daily '{task.get('text')}' cleared -> +{stat} EXP")
+                prev["lastCreditedDate"] = today_str
+            app_data["tasks"][task_id] = prev
+
+        # --- Process To-Dos ---
+        for task in todos:
+            stat = stats_engine.match_stat_from_tags(task.get("tags"), tag_id_to_name)
+            if not stat:
+                continue
+            task_id = task["id"]
+            completed = bool(task.get("completed"))
+            prev = app_data["tasks"].get(task_id, {})
+
+            if completed and not prev.get("credited", False):
+                difficulty = stats_engine.priority_to_difficulty(task.get("priority", 1))
+                increment = stats_engine.DIFFICULTY_INCREMENT[difficulty]
+                stats_engine.apply_progress(app_data["stats"], stat, increment, direction="up")
+                data_store.add_log(app_data, f"Quest '{task.get('text')}' cleared -> +{stat} EXP")
+                prev["credited"] = True
+            app_data["tasks"][task_id] = prev
+
         app_data["last_synced"] = time.strftime("%Y-%m-%d %H:%M:%S")
-
-        # Map Habitica Experience / Level to Player Attributes
-        user_lvl = stats_data.get("lvl", 1)
-        exp_pct = stats_data.get("exp", 0) / max(1, stats_data.get("toNextLevel", 100))
-
-        for stat in stats_engine.STATS:
-            app_data["stats"][stat]["level"] = max(1, user_lvl)
-            app_data["stats"][stat]["progress"] = min(max(exp_pct, 0.0), 1.0)
-
-        data_store.add_log(app_data, f"Synced telemetry from Habitica. User Level: {user_lvl}")
         data_store.save_data(app_data)
-        st.success("Successfully synchronized with Habitica!")
+        st.success("Synchronized stats via stats_engine!")
+
     except HabiticaError as err:
         st.error(f"Sync failed: {err}")
     except Exception as e:
-        st.error(f"Unexpected error during sync: {e}")
+        st.error(f"Sync error: {e}")
 
-# Automatically sync on initial session load
+# Run sync on initial load
 if app_data.get("last_synced") is None:
     sync_habitica()
 
 # ---------------------------------------------------------
-# Header & Actions
+# Header & Player Level Banner
 # ---------------------------------------------------------
 col1, col2 = st.columns([3, 1])
 with col1:
@@ -143,7 +213,7 @@ with col2:
         sync_habitica()
         st.rerun()
 
-# Vitality (HP) Display
+# Health Status (HP)
 hp_ratio = min(max(app_data["hp"] / app_data["max_hp"], 0.0), 1.0)
 st.caption(f"VITALITY (HP): {app_data['hp']:.1f} / {app_data['max_hp']:.0f}")
 st.progress(hp_ratio)
@@ -151,7 +221,7 @@ st.progress(hp_ratio)
 st.subheader("Attributes")
 
 # ---------------------------------------------------------
-# Render Attributes
+# Render Individual Attributes
 # ---------------------------------------------------------
 for stat_name in stats_engine.STATS:
     stat_info = app_data["stats"][stat_name]
@@ -172,7 +242,7 @@ for stat_name in stats_engine.STATS:
     st.progress(min(max(progress, 0.0), 1.0))
 
 # ---------------------------------------------------------
-# System Logs
+# System Logs Drawer
 # ---------------------------------------------------------
 with st.expander("System Logs"):
     if app_data.get("log"):
