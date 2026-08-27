@@ -1,37 +1,35 @@
-import json
-import os
-from datetime import date
+import streamlit as st
+from datetime import datetime
 
-import stats_engine
-
-DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
-
+def get_default_data():
+    """Returns a baseline status data structure."""
+    return {
+        "hp": 50.0,
+        "max_hp": 50.0,
+        "last_synced": None,
+        "stats": {
+            "Discipline": {"level": 1, "progress": 0.0},
+            "Deep Focus": {"level": 1, "progress": 0.0},
+            "Activity": {"level": 1, "progress": 0.0},
+            "Intelligence": {"level": 1, "progress": 0.0},
+            "Hacking": {"level": 1, "progress": 0.0},
+        },
+        "log": []
+    }
 
 def load_data():
-    if not os.path.exists(DATA_FILE):
-        return {
-            "stats": stats_engine.new_stat_block(),
-            "tasks": {},  # task_id -> {"counterUp": int, "lastCreditedDate": "YYYY-MM-DD"}
-            "log": [],  # list of recent event strings, newest first
-            "last_synced": None,
-        }
-    with open(DATA_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    # Backfill any keys that might be missing (e.g. after an app update)
-    data.setdefault("stats", stats_engine.new_stat_block())
-    data.setdefault("tasks", {})
-    data.setdefault("log", [])
-    data.setdefault("last_synced", None)
-    for stat in stats_engine.STATS:
-        data["stats"].setdefault(stat, {"level": 1, "progress": 0.0})
-    return data
-
+    """Loads state from Streamlit Session State instead of local JSON file."""
+    if "app_data" not in st.session_state:
+        st.session_state["app_data"] = get_default_data()
+    return st.session_state["app_data"]
 
 def save_data(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+    """Updates session state cache."""
+    st.session_state["app_data"] = data
 
-
-def add_log(data, message, max_entries=100):
-    data["log"].insert(0, f"[{date.today().isoformat()}] {message}")
-    data["log"] = data["log"][:max_entries]
+def add_log(data, message):
+    """Appends a timestamped log entry to the in-memory log list."""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = f"[{timestamp}] {message}"
+    data["log"].insert(0, log_entry)
+    data["log"] = data["log"][:50]  # Keep latest 50 entries
