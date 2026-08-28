@@ -50,9 +50,10 @@ st.markdown(
     .stat-box {
         background-color: #161b22;
         border: 1px solid #30363d;
-        border-radius: 8px;
-        padding: 14px 16px;
-        margin-bottom: 8px;
+        border-radius: 8px 8px 0 0;
+        padding: 12px 16px;
+        margin-top: 12px;
+        margin-bottom: 0px;
     }
     .stat-header {
         display: flex;
@@ -61,13 +62,21 @@ st.markdown(
     }
     .stat-name {
         font-weight: 700;
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         color: #f3f4f6;
     }
     .stat-level-text {
         font-weight: bold;
         color: #3b82f6;
-        font-size: 1.1rem;
+        font-size: 1.05rem;
+    }
+    /* Fix Streamlit default element margins for pixel-perfect alignment */
+    div[data-testid="stProgress"] {
+        margin-top: -6px;
+        margin-bottom: 16px;
+    }
+    div[data-testid="stProgress"] > div {
+        border-radius: 0 0 8px 8px;
     }
     </style>
 """,
@@ -91,7 +100,6 @@ def sync_habitica():
 
         client = HabiticaClient(user_id, api_token)
 
-        # Capture overall level prior to calculation
         old_overall = stats_engine.overall_level(app_data["stats"])
 
         # Update HP
@@ -194,7 +202,7 @@ def sync_habitica():
         app_data["last_synced"] = today_str
         data_store.save_data(app_data)
 
-        # Trigger Pop-up Message on Level-Up
+        # Level up notification check
         new_overall = stats_engine.overall_level(app_data["stats"])
         if new_overall > old_overall:
             st.toast("⚡ You leveled up!", icon="🎉")
@@ -236,13 +244,13 @@ st.progress(hp_ratio)
 
 st.subheader("Attributes")
 
-# Render Attributes with explicit percentage labels
+# Render Attributes with aligned bars
 for stat_name in stats_engine.STATS:
     stat_info = app_data["stats"][stat_name]
     level = stat_info["level"]
     progress = stat_info["progress"]
 
-    pct_display = int(progress * 100)
+    pct_display = int(round(progress * 100))
 
     st.markdown(
         f"""
@@ -255,7 +263,7 @@ for stat_name in stats_engine.STATS:
     """,
         unsafe_allow_html=True,
     )
-    st.progress(min(max(progress, 0.0), 1.0))
+    st.progress(min(max(float(progress), 0.0), 1.0))
 
 # System Logs
 with st.expander("System Logs"):
