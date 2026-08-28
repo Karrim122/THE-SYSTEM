@@ -6,7 +6,7 @@ import stats_engine
 from habitica_api import HabiticaClient, HabiticaError
 
 # ---------------------------------------------------------
-# Page Configuration & Styling
+# Page Configuration & Visual Styling
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Hunter Status Window",
@@ -74,11 +74,11 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Load current app state from memory
+# Load existing state
 app_data = data_store.load_data()
 
 # ---------------------------------------------------------
-# Habitica Processing Logic (Driven by stats_engine.py)
+# Habitica Sync Processing via stats_engine
 # ---------------------------------------------------------
 def sync_habitica():
     try:
@@ -91,17 +91,18 @@ def sync_habitica():
 
         client = HabiticaClient(user_id, api_token)
 
-        # Fetch core profile & HP
+        # Capture overall level prior to calculation
+        old_overall = stats_engine.overall_level(app_data["stats"])
+
+        # Update HP
         user_info = client.get_user()
         user_stats = user_info.get("stats", {})
         app_data["hp"] = float(user_stats.get("hp", 50))
         app_data["max_hp"] = float(user_stats.get("maxHP", 50))
 
-        # Build tag dictionary
         tags = client.get_tags()
         tag_id_to_name = {t["id"]: t["name"] for t in tags}
 
-        # Fetch user tasks
         habits = client.get_tasks("habits")
         dailies = client.get_tasks("dailys")
         active_todos = client.get_tasks("todos")
@@ -124,21 +125,25 @@ def sync_habitica():
             prev_up = prev.get("counterUp", 0)
             prev_down = prev.get("counterDown", 0)
 
-            # Positive increments
             new_up = counter_up - prev_up if counter_up >= prev_up else counter_up
             if new_up > 0:
                 difficulty = stats_engine.priority_to_difficulty(task.get("priority", 1))
                 increment = stats_engine.DIFFICULTY_INCREMENT[difficulty] * new_up
-                lvl_delta = stats_engine.apply_progress(app_data["stats"], stat_name, increment, direction="up")
-                data_store.add_log(app_data, f"Habit '{task.get('text')}' (+{new_up}) -> +{increment:.3f} {stat_name}")
+                lvl_change = stats_engine.apply_progress(app_data["stats"], stat_name, increment, direction="up")
+                log_msg = f"Quest Action '{task.get('text')}' x{new_up} -> +{stat_name} EXP"
+                if lvl_change > 0:
+                    log_msg += f" [LEVEL UP! {stat_name} is now Lv.{app_data['stats'][stat_name]['level']}]"
+                data_store.add_log(app_data, log_msg)
 
-            # Negative decrements
             new_down = counter_down - prev_down if counter_down >= prev_down else counter_down
             if new_down > 0:
                 difficulty = stats_engine.priority_to_difficulty(task.get("priority", 1))
                 increment = stats_engine.DIFFICULTY_INCREMENT[difficulty] * new_down
-                lvl_delta = stats_engine.apply_progress(app_data["stats"], stat_name, increment, direction="down")
-                data_store.add_log(app_data, f"Habit Penalty '{task.get('text')}' (-{new_down}) -> -{increment:.3f} {stat_name}")
+                lvl_change = stats_engine.apply_progress(app_data["stats"], stat_name, increment, direction="down")
+                log_msg = f"Penalty Action '{task.get('text')}' x{new_down} -> -{stat_name} EXP"
+                if lvl_change < 0:
+                    log_msg += f" [LEVEL DOWN! {stat_name} is now Lv.{app_data['stats'][stat_name]['level']}]"
+                data_store.add_log(app_data, log_msg)
 
             app_data["tasks"][task_id] = {"counterUp": counter_up, "counterDown": counter_down}
 
@@ -155,8 +160,11 @@ def sync_habitica():
             if completed and prev.get("lastCreditedDate") != today_str:
                 difficulty = stats_engine.priority_to_difficulty(task.get("priority", 1))
                 increment = stats_engine.DIFFICULTY_INCREMENT[difficulty]
-                stats_engine.apply_progress(app_data["stats"], stat_name, increment, direction="up")
-                data_store.add_log(app_data, f"Daily '{task.get('text')}' completed -> +{increment:.3f} {stat_name}")
+                lvl_change = stats_engine.apply_progress(app_data["stats"], stat_name, increment, direction="up")
+                log_msg = f"Daily Quest '{task.get('text')}' cleared -> +{stat_name} EXP"
+                if lvl_change > 0:
+                    log_msg += f" [LEVEL UP! {stat_name} is now Lv.{app_data['stats'][stat_name]['level']}]"
+                data_store.add_log(app_data, log_msg)
                 prev["lastCreditedDate"] = today_str
 
             app_data["tasks"][task_id] = prev
@@ -174,27 +182,34 @@ def sync_habitica():
             if completed and not prev.get("credited", False):
                 difficulty = stats_engine.priority_to_difficulty(task.get("priority", 1))
                 increment = stats_engine.DIFFICULTY_INCREMENT[difficulty]
-                stats_engine.apply_progress(app_data["stats"], stat_name, increment, direction="up")
-                data_store.add_log(app_data, f"To-Do '{task.get('text')}' cleared -> +{increment:.3f} {stat_name}")
+                lvl_change = stats_engine.apply_progress(app_data["stats"], stat_name, increment, direction="up")
+                log_msg = f"Quest Objective '{task.get('text')}' cleared -> +{stat_name} EXP"
+                if lvl_change > 0:
+                    log_msg += f" [LEVEL UP! {stat_name} is now Lv.{app_data['stats'][stat_name]['level']}]"
+                data_store.add_log(app_data, log_msg)
                 prev["credited"] = True
 
             app_data["tasks"][task_id] = prev
 
-        app_data["last_synced"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        app_data["last_synced"] = today_str
         data_store.save_data(app_data)
-        st.success("Calculated fractional stats successfully via stats_engine!")
+
+        # Trigger Pop-up Message on Level-Up
+        new_overall = stats_engine.overall_level(app_data["stats"])
+        if new_overall > old_overall:
+            st.toast("⚡ You leveled up!", icon="🎉")
+            st.balloons()
+            st.success(f"You leveled up! Reached Overall Level {new_overall}!")
+        else:
+            st.success("Synchronized with Habitica!")
 
     except HabiticaError as err:
         st.error(f"Sync failed: {err}")
     except Exception as e:
         st.error(f"Sync error: {e}")
 
-# Run initial sync on load
-if app_data.get("last_synced") is None:
-    sync_habitica()
-
 # ---------------------------------------------------------
-# Header Banner (Without 'Last Synced' Phrase)
+# UI Rendering
 # ---------------------------------------------------------
 col1, col2 = st.columns([3, 1])
 with col1:
@@ -214,27 +229,27 @@ with col2:
         sync_habitica()
         st.rerun()
 
-# Vitality Display
+# Health Display
 hp_ratio = min(max(app_data["hp"] / app_data["max_hp"], 0.0), 1.0)
 st.caption(f"VITALITY (HP): {app_data['hp']:.1f} / {app_data['max_hp']:.0f}")
 st.progress(hp_ratio)
 
 st.subheader("Attributes")
 
-# ---------------------------------------------------------
-# Render Attributes
-# ---------------------------------------------------------
+# Render Attributes with explicit percentage labels
 for stat_name in stats_engine.STATS:
     stat_info = app_data["stats"][stat_name]
     level = stat_info["level"]
     progress = stat_info["progress"]
+
+    pct_display = int(progress * 100)
 
     st.markdown(
         f"""
         <div class="stat-box">
             <div class="stat-header">
                 <span class="stat-name">{stat_name}</span>
-                <span class="stat-level-text">Lvl {level}</span>
+                <span class="stat-level-text">Lvl {level} ({pct_display}%)</span>
             </div>
         </div>
     """,
@@ -242,9 +257,7 @@ for stat_name in stats_engine.STATS:
     )
     st.progress(min(max(progress, 0.0), 1.0))
 
-# ---------------------------------------------------------
-# System Activity Logs
-# ---------------------------------------------------------
+# System Logs
 with st.expander("System Logs"):
     if app_data.get("log"):
         for log_entry in app_data["log"][:15]:
