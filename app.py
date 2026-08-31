@@ -29,7 +29,7 @@ STAT_DISPLAY_NAMES = {
 st.markdown(
     """
     <style>
-    /* Remove extra Streamlit vertical padding on mobile */
+    /* Reduce vertical padding for mobile fit */
     .block-container {
         padding-top: 1rem !important;
         padding-bottom: 1rem !important;
@@ -78,13 +78,6 @@ st.markdown(
         margin-bottom: 8px;
         letter-spacing: 1px;
     }
-
-    /* Mobile 2-column Grid */
-    .mobile-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-    }
     
     /* Compact Square Stat Box */
     .stat-card-square {
@@ -97,6 +90,7 @@ st.markdown(
         align-items: center;
         text-align: center;
         padding: 6px;
+        margin-bottom: 10px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
     
@@ -146,24 +140,19 @@ st.markdown(
 st.markdown('<div class="section-title">ATTRIBUTES</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# Compact Mobile Grid
+# Compact Grid using Streamlit Columns (Single-Line HTML)
 # ---------------------------------------------------------
-grid_html = '<div class="mobile-grid">'
+cols = st.columns(2)
 
-for stat_name in stats_engine.STATS:
+for idx, stat_name in enumerate(stats_engine.STATS):
     stat_info = stats_block[stat_name]
     level = stat_info["level"]
     
     color = STAT_COLORS.get(stat_name, "#00d2ff")
     display_name = STAT_DISPLAY_NAMES.get(stat_name, stat_name)
 
-    grid_html += f"""
-        <div class="stat-card-square" style="border: 1px solid {color};">
-            <div class="stat-card-name" style="color: {color};">◈ {display_name}</div>
-            <div class="stat-card-level" style="color: {color};">LVL {level:02d}</div>
-        </div>
-    """
+    # Single line inline string prevents Streamlit from parsing raw text as code
+    single_line_card = f'<div class="stat-card-square" style="border: 1px solid {color};"><div class="stat-card-name" style="color: {color};">◈ {display_name}</div><div class="stat-card-level" style="color: {color};">LVL {level:02d}</div></div>'
 
-grid_html += "</div>"
-
-st.markdown(grid_html, unsafe_allow_html=True)
+    with cols[idx % 2]:
+        st.markdown(single_line_card, unsafe_allow_html=True)
