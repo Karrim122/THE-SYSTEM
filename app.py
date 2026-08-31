@@ -26,10 +26,30 @@ STAT_DISPLAY_NAMES = {
     "Hacking": "Career",
 }
 
+def get_rank(level: int) -> str:
+    if level < 5:
+        return "E RANK"
+    elif level <= 9:
+        return "D RANK"
+    elif level <= 19:
+        return "C RANK"
+    elif level <= 34:
+        return "B RANK"
+    elif level <= 49:
+        return "A RANK"
+    elif level <= 64:
+        return "S RANK"
+    elif level <= 79:
+        return "SS RANK"
+    elif level <= 99:
+        return "SSS RANK"
+    else:
+        return "ANOTHER LEVEL"
+
 st.markdown(
     """
     <style>
-    /* Add extra padding at top to avoid cutoff */
+    /* Top margin spacing fix */
     .block-container {
         padding-top: 2.5rem !important;
         padding-bottom: 1rem !important;
@@ -43,7 +63,7 @@ st.markdown(
         font-family: 'Segoe UI', Roboto, sans-serif;
     }
     
-    /* Compact Header Banner with top margin fix */
+    /* Header Card Banner */
     .status-card {
         background: linear-gradient(135deg, #111827 0%, #0b0f19 100%);
         border: 1.5px solid #00d2ff;
@@ -71,6 +91,15 @@ st.markdown(
         text-shadow: 0 0 8px rgba(0, 210, 255, 0.4);
         margin: 2px 0;
         line-height: 1;
+    }
+
+    .status-rank {
+        color: #38bdf8;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        margin-top: 4px;
+        text-transform: uppercase;
     }
 
     .section-title {
@@ -120,14 +149,15 @@ st.markdown(
 app_data = data_store.load_data()
 stats_block = app_data["stats"]
 
-# Calculate Overall Player Level
+# Calculate Overall Player Level and Rank
 current_overall_level = stats_engine.overall_level(stats_block)
+player_rank = get_rank(current_overall_level)
 
 # ---------------------------------------------------------
 # Header & Player Level Banner
 # ---------------------------------------------------------
 st.markdown(
-    f"""<div class="status-card"><div class="status-title">SYSTEM STATUS</div><div class="status-level">LVL {current_overall_level:02d}</div><div style="color: #64748b; font-size: 0.75rem; margin-top: 4px;">LAST SYNCED: {app_data.get("last_synced") or "Never"}</div></div>""",
+    f"""<div class="status-card"><div class="status-title">SYSTEM STATUS</div><div class="status-level">LVL {current_overall_level:02d}</div><div class="status-rank">[{player_rank}]</div></div>""",
     unsafe_allow_html=True,
 )
 
