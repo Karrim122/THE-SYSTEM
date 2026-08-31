@@ -29,9 +29,9 @@ STAT_DISPLAY_NAMES = {
 st.markdown(
     """
     <style>
-    /* Reduce vertical padding for mobile fit */
+    /* Add extra padding at top to avoid cutoff */
     .block-container {
-        padding-top: 1rem !important;
+        padding-top: 2.5rem !important;
         padding-bottom: 1rem !important;
         padding-left: 0.8rem !important;
         padding-right: 0.8rem !important;
@@ -43,15 +43,17 @@ st.markdown(
         font-family: 'Segoe UI', Roboto, sans-serif;
     }
     
-    /* Compact Header Banner */
+    /* Compact Header Banner with top margin fix */
     .status-card {
         background: linear-gradient(135deg, #111827 0%, #0b0f19 100%);
         border: 1.5px solid #00d2ff;
         border-radius: 10px;
-        padding: 12px;
+        padding: 14px 12px;
         text-align: center;
         box-shadow: 0 0 12px rgba(0, 210, 255, 0.15);
-        margin-bottom: 12px;
+        margin-top: 4px;
+        margin-bottom: 14px;
+        overflow: hidden;
     }
     
     .status-title {
@@ -125,15 +127,7 @@ current_overall_level = stats_engine.overall_level(stats_block)
 # Header & Player Level Banner
 # ---------------------------------------------------------
 st.markdown(
-    f"""
-    <div class="status-card">
-        <div class="status-title">SYSTEM STATUS</div>
-        <div class="status-level">LVL {current_overall_level:02d}</div>
-        <div style="color: #64748b; font-size: 0.75rem; margin-top: 4px;">
-            LAST SYNCED: {app_data.get("last_synced") or "Never"}
-        </div>
-    </div>
-""",
+    f"""<div class="status-card"><div class="status-title">SYSTEM STATUS</div><div class="status-level">LVL {current_overall_level:02d}</div><div style="color: #64748b; font-size: 0.75rem; margin-top: 4px;">LAST SYNCED: {app_data.get("last_synced") or "Never"}</div></div>""",
     unsafe_allow_html=True,
 )
 
@@ -151,7 +145,6 @@ for idx, stat_name in enumerate(stats_engine.STATS):
     color = STAT_COLORS.get(stat_name, "#00d2ff")
     display_name = STAT_DISPLAY_NAMES.get(stat_name, stat_name)
 
-    # Single line inline string prevents Streamlit from parsing raw text as code
     single_line_card = f'<div class="stat-card-square" style="border: 1px solid {color};"><div class="stat-card-name" style="color: {color};">◈ {display_name}</div><div class="stat-card-level" style="color: {color};">LVL {level:02d}</div></div>'
 
     with cols[idx % 2]:
