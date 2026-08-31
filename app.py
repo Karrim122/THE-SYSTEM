@@ -63,26 +63,26 @@ st.markdown(
         line-height: 1;
     }
 
-    .attribute-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        margin-top: 15px;
-    }
-    
-    .stat-card-block {
+    /* Square stat box styling */
+    .stat-card-square {
         background-color: #111827;
-        border-radius: 8px;
-        padding: 16px;
+        border-radius: 12px;
+        aspect-ratio: 1 / 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
         text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        padding: 12px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
     }
     
     .stat-card-name {
         font-weight: 700;
-        font-size: 0.95rem;
+        font-size: 0.85rem;
         letter-spacing: 1px;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
         text-transform: uppercase;
     }
     
@@ -124,24 +124,19 @@ st.markdown(
 st.subheader("Attributes")
 
 # ---------------------------------------------------------
-# Render Colored Attribute Blocks (No Progress Bars)
+# Render Square Attribute Blocks via Streamlit Columns
 # ---------------------------------------------------------
-cards_html = '<div class="attribute-grid">'
+cols = st.columns(2)
 
-for stat_name in stats_engine.STATS:
+for idx, stat_name in enumerate(stats_engine.STATS):
     stat_info = stats_block[stat_name]
     level = stat_info["level"]
     
     color = STAT_COLORS.get(stat_name, "#00d2ff")
     display_name = STAT_DISPLAY_NAMES.get(stat_name, stat_name)
 
-    cards_html += f"""
-        <div class="stat-card-block" style="border: 1px solid {color};">
-            <div class="stat-card-name" style="color: {color};">◈ {display_name}</div>
-            <div class="stat-card-level" style="color: {color};">LVL {level:02d}</div>
-        </div>
-    """
+    card_html = f"""<div class="stat-card-square" style="border: 1.5px solid {color};"><div class="stat-card-name" style="color: {color};">◈ {display_name}</div><div class="stat-card-level" style="color: {color};">LVL {level:02d}</div></div>"""
 
-cards_html += "</div>"
-
-st.markdown(cards_html, unsafe_allow_html=True)
+    # Alternate between left and right column
+    with cols[idx % 2]:
+        st.markdown(card_html, unsafe_allow_html=True)
