@@ -1,24 +1,24 @@
 {
   "stats": {
     "Discipline": {
-      "level": 2,
-      "progress": 0.7
+      "level": 3,
+      "progress": 0.95
     },
     "Deep Focus": {
-      "level": 2,
-      "progress": 0.35
+      "level": 3,
+      "progress": 0.55
     },
     "Activity": {
       "level": 2,
-      "progress": 0.25
+      "progress": 0.75
     },
     "Intelligence": {
-      "level": 2,
-      "progress": 0.9
+      "level": 3,
+      "progress": 0.95
     },
     "Hacking": {
-      "level": 1,
-      "progress": 0.85
+      "level": 2,
+      "progress": 0.05
     }
   },
   "tasks": {
@@ -31,7 +31,7 @@
       "counterDown": 0
     },
     "BF7C9479-1D73-42F3-A08F-B4126234BB70": {
-      "counterUp": 0,
+      "counterUp": 2,
       "counterDown": 0
     },
     "256E3D37-CB81-4446-B4A7-547003193C14": {
@@ -39,34 +39,34 @@
       "counterDown": 0
     },
     "D7F892D9-A902-4B6D-8328-56124AC2E1C5": {
+      "counterUp": 0,
+      "counterDown": 2
+    },
+    "72CC76EF-3E6B-4170-814E-D439FCABCF08": {
       "counterUp": 1,
       "counterDown": 1
     },
-    "72CC76EF-3E6B-4170-814E-D439FCABCF08": {
+    "BFF9B6C7-57AD-4A67-84B7-E86714E17233": {
       "counterUp": 0,
       "counterDown": 0
     },
-    "BFF9B6C7-57AD-4A67-84B7-E86714E17233": {
-      "counterUp": 1,
-      "counterDown": 0
-    },
     "C3385CC9-B50F-4AFD-9AEC-2E7B3D84EB2C": {
-      "lastCreditedDate": "2026-08-26"
+      "lastCreditedDate": "2026-08-30"
     },
     "C6AE746D-4718-4E50-880D-97D4BA7D34D5": {
       "lastCreditedDate": "2026-08-22"
     },
     "69C64F73-8718-482E-9A88-A34473CC168A": {
-      "lastCreditedDate": "2026-08-27"
+      "lastCreditedDate": "2026-08-28"
     },
     "DCA47410-FBB4-409F-9C67-354085D81392": {
-      "lastCreditedDate": "2026-08-25"
+      "lastCreditedDate": "2026-08-28"
     },
     "AB21F5F3-FEB3-4475-B178-7ED49FD32912": {
-      "lastCreditedDate": "2026-08-27"
+      "lastCreditedDate": "2026-08-30"
     },
     "5113397C-0D9D-4476-944C-F68A551AD32C": {
-      "lastCreditedDate": "2026-08-27"
+      "lastCreditedDate": "2026-08-29"
     },
     "9720ED88-37D7-4992-9D83-C9D5FC4ABF25": {
       "lastCreditedDate": "2026-08-24"
@@ -124,120 +124,81 @@
     "CC0EAD87-7EDE-44FE-829C-A3386F2C6502": {
       "credited": true
     },
-    "745c802a-3060-43f4-9562-b9d65be3474a": {},
-    "DDD86489-B239-49DD-87EF-74968E3C0CD9": {
-      "counterUp": 0,
-      "counterDown": 0
+    "745c802a-3060-43f4-9562-b9d65be3474a": {
+      "credited": true
     },
-    "8b453e25-df4f-4a96-b372-4ee540ec33e8": {},
+    "DDD86489-B239-49DD-87EF-74968E3C0CD9": {
+      "counterUp": 3,
+      "counterDown": 1
+    },
+    "8b453e25-df4f-4a96-b372-4ee540ec33e8": {
+      "credited": true
+    },
     "E30D7B03-3A1B-4677-A734-2912CDB79FF9": {
       "credited": true
     },
-    "4fa7851b-0cc8-41a3-af66-da485068703a": {}
+    "4fa7851b-0cc8-41a3-af66-da485068703a": {
+      "credited": true
+    },
+    "1E97D18B-1E3E-4F3A-8DDD-DEB8C6A6F59D": {
+      "credited": true
+    },
+    "A9557EFA-95DD-4C01-A6C1-4533F88A1F09": {
+      "credited": true
+    },
+    "C09FF33E-1571-4C6C-8C20-DB926CD1467F": {
+      "lastCreditedDate": "2026-08-31"
+    },
+    "0fa01a85-9a44-44a5-a82d-fca5f0474e8d": {
+      "credited": true
+    },
+    "05e90006-a69a-4b9f-8f27-e9bdaa22d16e": {},
+    "965593E2-1529-44F3-AF13-2A14FF462E53": {
+      "credited": true
+    },
+    "B0D98615-CFC5-4927-9239-15484A2DACFD": {
+      "credited": true
+    },
+    "9722ae9a-fce9-48a3-afff-f9fdbe0a9dd5": {
+      "credited": true
+    },
+    "0b48e6a5-52a6-403e-8f48-263af234cd68": {
+      "credited": true
+    },
+    "C1B70A2B-8C40-49A4-AE8F-9A045B489411": {
+      "lastCreditedDate": "2026-08-31"
+    },
+    "85DA05E9-F7E6-4D02-8D15-EEEFC5DB8D12": {
+      "counterUp": 2,
+      "counterDown": 0
+    },
+    "FA9DDCB2-B362-4870-B914-A43DE76A8BDD": {
+      "counterUp": 0,
+      "counterDown": 0
+    },
+    "EA6FA4E2-8998-438E-B0D9-E5A3103390A4": {
+      "lastCreditedDate": "2026-08-31"
+    },
+    "0FF30EC6-DD8E-4E7E-A98C-3E660863A4F7": {},
+    "421C3511-9685-45B6-A8AB-2B9A5B6C97EF": {
+      "credited": true
+    },
+    "a4c30778-a5fe-4fc3-bc9c-89cc9628a51c": {},
+    "4D731A3C-BCB0-4570-BBD5-3EBF7144E2E7": {
+      "counterUp": 1,
+      "counterDown": 0
+    },
+    "01D0B326-DD76-493C-BD52-FC37BA2BB60C": {
+      "credited": true
+    },
+    "1861927e-d29b-4a3b-886e-24dcbfb94ba1": {
+      "credited": true
+    },
+    "7b35482d-0e0c-4f07-b683-e4b294c320ee": {},
+    "9467BF08-9949-41BE-9312-B204F069B375": {}
   },
-  "log": [
-    "[2026-08-27] Quest Action '\ud83d\udd34Distraction ' x1 -> +Discipline EXP",
-    "[2026-08-27] Quest Objective '\u0627\u0644\u062a\u0643\u064a\u0641' cleared -> +Discipline EXP",
-    "[2026-08-27] Daily Quest '\u265f\ufe0fChess' cleared -> +Intelligence EXP",
-    "[2026-08-27] Daily Quest '\ud83c\udfc3Activity ' cleared -> +Activity EXP",
-    "[2026-08-27] Daily Quest '\u231b\ufe0fFocus block' cleared -> +Deep Focus EXP",
-    "[2026-08-27] Penalty Action '\ud83e\udd57Nutrition' x1 -> -Activity EXP",
-    "[2026-08-27] Quest Action '\ud83e\udd57Nutrition' x1 -> +Activity EXP",
-    "[2026-08-26] Quest Objective 'Linkedin' cleared -> +Hacking EXP",
-    "[2026-08-26] Daily Quest '\ud83c\udfc3Activity ' cleared -> +Activity EXP [LEVEL UP! Activity is now Lv.2]",
-    "[2026-08-26] Penalty Action '\ud83d\udcf5Scrolling' x1 -> -Deep Focus EXP",
-    "[2026-08-26] Penalty Action '\ud83d\udd34Distraction ' x2 -> -Discipline EXP",
-    "[2026-08-26] Quest Action '\ud83d\udd34Distraction ' x1 -> +Discipline EXP",
-    "[2026-08-26] Penalty Action '\ud83e\udd57Nutrition' x2 -> -Activity EXP",
-    "[2026-08-26] Quest Action '\ud83e\udd57Nutrition' x1 -> +Activity EXP",
-    "[2026-08-26] Quest Objective '\u062c\u062f \u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0644\u0644stats' cleared -> +Intelligence EXP",
-    "[2026-08-26] Daily Quest '\u231b\ufe0fFocus block' cleared -> +Deep Focus EXP",
-    "[2026-08-26] \u26a0\ufe0f Auto-sync failed: Unexpected system error: HTTPSConnectionPool(host='habitica.com', port=443): Max retries exceeded with url: /api/v3/user (Caused by ConnectTimeoutError(<HTTPSConnection(host='habitica.com', port=443) at 0x1faddaeae70>, 'Connection to habitica.com timed out. (connect timeout=15)'))",
-    "[2026-08-26] \u26a0\ufe0f Auto-sync failed: Unexpected system error: HTTPSConnectionPool(host='habitica.com', port=443): Max retries exceeded with url: /api/v3/user (Caused by ConnectTimeoutError(<HTTPSConnection(host='habitica.com', port=443) at 0x29a4a4b3170>, 'Connection to habitica.com timed out. (connect timeout=15)'))",
-    "[2026-08-26] Daily Quest '\u2600\ufe0fWake up early' cleared -> +Discipline EXP",
-    "[2026-08-25] Quest Action '\u2747\ufe0fJust start it \u231a\ufe0f' x1 -> +Discipline EXP",
-    "[2026-08-25] Daily Quest '\ud83c\udfc3Activity ' cleared -> +Activity EXP",
-    "[2026-08-25] Penalty Action '\ud83e\udd57Nutrition' x1 -> -Activity EXP",
-    "[2026-08-25] Quest Action '\ud83e\udd57Nutrition' x1 -> +Activity EXP",
-    "[2026-08-25] \u26a0\ufe0f Auto-sync failed: Unexpected system error: HTTPSConnectionPool(host='habitica.com', port=443): Max retries exceeded with url: /api/v3/user (Caused by NameResolutionError(\"HTTPSConnection(host='habitica.com', port=443): Failed to resolve 'habitica.com' ([Errno 11001] getaddrinfo failed)\"))",
-    "[2026-08-25] \u26a0\ufe0f Auto-sync failed: Unexpected system error: HTTPSConnectionPool(host='habitica.com', port=443): Max retries exceeded with url: /api/v3/user (Caused by NameResolutionError(\"HTTPSConnection(host='habitica.com', port=443): Failed to resolve 'habitica.com' ([Errno 11001] getaddrinfo failed)\"))",
-    "[2026-08-25] Quest Objective 'Blitz elo 1620' cleared -> +Intelligence EXP",
-    "[2026-08-25] Daily Quest '\ud83d\udc68\u200d\ud83d\udcbbWeb pentest course' cleared -> +Hacking EXP",
-    "[2026-08-25] Penalty Action '\ud83e\udd57Nutrition' x1 -> -Activity EXP",
-    "[2026-08-25] Quest Action '\ud83e\udd57Nutrition' x1 -> +Activity EXP",
-    "[2026-08-25] Quest Action '\u23f0Pomodoro' x1 -> +Deep Focus EXP",
-    "[2026-08-25] Daily Quest '\u265f\ufe0fChess' cleared -> +Intelligence EXP",
-    "[2026-08-25] Quest Objective 'Test' cleared -> +Intelligence EXP",
-    "[2026-08-25] Quest Objective 'Update the system' cleared -> +Intelligence EXP",
-    "[2026-08-25] Daily Quest '\ud83d\udedcCCNA course' cleared -> +Hacking EXP",
-    "[2026-08-25] Daily Quest '\u231b\ufe0fFocus block' cleared -> +Deep Focus EXP",
-    "[2026-08-25] Daily Quest '\u2600\ufe0fWake up early' cleared -> +Discipline EXP",
-    "[2026-08-24] Quest Action '\u2747\ufe0fJust start it ' x1 -> +Discipline EXP",
-    "[2026-08-24] Quest Objective '1600 blitz' cleared -> +Intelligence EXP",
-    "[2026-08-24] Daily Quest '\u265f\ufe0fChess' cleared -> +Intelligence EXP [LEVEL UP! Intelligence is now Lv.2]",
-    "[2026-08-24] Daily Quest '\ud83c\udfc3Activity ' cleared -> +Activity EXP",
-    "[2026-08-24] Quest Action '\ud83d\udd34Distraction ' x1 -> +Discipline EXP",
-    "[2026-08-24] Quest Action '\ud83d\udcd6Read' x1 -> +Intelligence EXP",
-    "[2026-08-24] Quest Action '\ud83e\udd16Resist and commit' x1 -> +Discipline EXP [LEVEL UP! Discipline is now Lv.2]",
-    "[2026-08-24] Penalty Action '\ud83e\udd16Resist and commit' x1 -> -Discipline EXP [LEVEL DOWN! Discipline is now Lv.1]",
-    "[2026-08-24] Quest Action '\ud83e\udd16Resist and commit' x1 -> +Discipline EXP [LEVEL UP! Discipline is now Lv.2]",
-    "[2026-08-24] Penalty Action '\ud83e\udd16Resist and commit' x1 -> -Discipline EXP [LEVEL DOWN! Discipline is now Lv.1]",
-    "[2026-08-24] Penalty Action '\ud83e\udd57Nutrition' x1 -> -Activity EXP",
-    "[2026-08-24] Quest Action '\ud83e\udd57Nutrition' x1 -> +Activity EXP",
-    "[2026-08-24] Daily Quest '\ud83d\udcaf Day targets' cleared -> +Discipline EXP",
-    "[2026-08-24] Quest Objective 'Obsedian' cleared -> +Intelligence EXP",
-    "[2026-08-24] Quest Action '\ud83e\udd16Resist and commit' x1 -> +Discipline EXP",
-    "[2026-08-24] Daily Quest '\ud83d\udedcCCNA course' cleared -> +Hacking EXP",
-    "[2026-08-24] Quest Action '\ud83d\udc68\u200d\ud83d\udcbbPractical and labs' x1 -> +Hacking EXP",
-    "[2026-08-24] Quest Action '\u23f0Pomodoro' x1 -> +Deep Focus EXP [LEVEL UP! Deep Focus is now Lv.2]",
-    "[2026-08-24] Quest Action '\u23f0Pomodoro' x1 -> +Deep Focus EXP",
-    "[2026-08-24] To-Do 'Test' completed -> +Intelligence progress",
-    "[2026-08-24] To-Do 'The system' completed -> +Deep Focus progress",
-    "[2026-08-24] To-Do 'System edit' completed -> +Intelligence progress",
-    "[2026-08-24] To-Do 'Test' completed -> +Intelligence progress",
-    "[2026-08-24] Daily '\u231b\ufe0fFocus block' completed -> +Deep Focus progress",
-    "[2026-08-24] Daily '\u2600\ufe0fWake up early' completed -> +Discipline progress",
-    "[2026-08-23] Daily '\ud83d\udcaf Day targets' completed -> +Discipline progress",
-    "[2026-08-23] Daily '\ud83c\udfc3Activity ' completed -> +Activity progress",
-    "[2026-08-23] Bad Habit '\ud83e\udd16Resist and commit' x2 (-) -> -Discipline progress",
-    "[2026-08-23] Daily '\u231b\ufe0fFocus block' completed -> +Deep Focus progress",
-    "[2026-08-23] Daily '\u2600\ufe0fWake up early' completed -> +Discipline progress",
-    "[2026-08-23] Habit '\ud83d\udd34Distraction ' x1 (+) -> +Discipline progress",
-    "[2026-08-22] Daily '\ud83d\udedcCCNA course' completed -> +Hacking progress",
-    "[2026-08-22] Bad Habit '\ud83e\udd16Resist and commit' x1 (-) -> -Discipline progress",
-    "[2026-08-22] Habit '\ud83e\udd16Resist and commit' x1 (+) -> +Discipline progress",
-    "[2026-08-22] Bad Habit '\ud83e\udd16Resist and commit' x2 (-) -> -Discipline progress",
-    "[2026-08-22] Daily '\u265f\ufe0fChess' completed -> +Intelligence progress",
-    "[2026-08-22] Daily '\ud83c\udfc3Activity ' completed -> +Activity progress",
-    "[2026-08-22] Habit '\ud83e\udd57Nutrition' x1 (+) -> +Activity progress",
-    "[2026-08-22] Habit '\u23f0Pomodoro' x1 (+) -> +Deep Focus progress",
-    "[2026-08-22] Bad Habit '\ud83e\udd57Nutrition' x1 (-) -> -Activity progress",
-    "[2026-08-22] Habit '\ud83e\udd57Nutrition' x1 (+) -> +Activity progress",
-    "[2026-08-22] Habit '\ud83d\udcd6Read' x1 (+) -> +Intelligence progress",
-    "[2026-08-22] Habit '\ud83e\uddd8Meditation ' x1 (+) -> +Deep Focus progress",
-    "[2026-08-22] Habit '\ud83e\udd16Resist and commit' x1 (+) -> +Discipline progress",
-    "[2026-08-22] Daily '\ud83d\udcaf Day targets' completed -> +Discipline progress",
-    "[2026-08-22] Daily '\u231b\ufe0fFocus block' completed -> +Deep Focus progress",
-    "[2026-08-22] Habit '\ud83e\uddd8Meditation ' x1 (+) -> +Deep Focus progress",
-    "[2026-08-22] Habit '\ud83d\udcd6Read' x1 (+) -> +Intelligence progress",
-    "[2026-08-22] Habit '\ud83e\udd16Resist and commit' x1 (+) -> +Discipline progress",
-    "[2026-08-22] Bad Habit 'Test' x1 (-) -> -Deep Focus progress",
-    "[2026-08-22] Habit 'Test' x1 (+) -> +Deep Focus progress",
-    "[2026-08-22] Daily '\ud83d\udcd2Golden notes' completed -> +Intelligence progress",
-    "[2026-08-22] Daily '\u2600\ufe0fWake up early' completed -> +Discipline progress",
-    "[2026-08-21] Progress up for Deep Focus (MEDIUM)",
-    "[2026-08-21] Habit '\ud83d\udd34Distraction ' x1 (+) -> +Discipline progress",
-    "[2026-08-21] Habit '\ud83e\udd57Nutrition' x1 (+) -> +Activity progress",
-    "[2026-08-21] Bad Habit '\ud83e\udd57Nutrition' x1 (-) -> -Activity progress",
-    "[2026-08-21] Habit '\ud83e\udd57Nutrition' x1 (+) -> +Activity progress",
-    "[2026-08-21] Bad Habit '\ud83d\udcf5Scrolling' x2 (-) -> -Deep Focus progress",
-    "[2026-08-21] Bad Habit '\ud83e\udd57Nutrition' x2 (-) -> -Activity progress",
-    "[2026-08-21] Bad Habit 'Bad habit' x1 (-) -> -Activity progress",
-    "[2026-08-21] Habit '\ud83e\udd57Nutrition' x1 -> +Activity progress",
-    "[2026-08-21] Habit '\ud83d\udcd6Read' x1 -> +Intelligence progress",
-    "[2026-08-21] Daily '\ud83c\udfc3Activity ' completed -> +Activity progress"
-  ],
-  "last_synced": "2026-08-27",
+  "log": [],
+  "last_synced": "2026-08-31",
   "overall_level_offset": 0,
   "hp": 50.0,
   "max_hp": 50.0
