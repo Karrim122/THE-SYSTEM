@@ -2,9 +2,6 @@ import streamlit as st
 import stats_engine
 import habitica_api
 
-# ---------------------------------------------------------
-# Page Configuration & Styling
-# ---------------------------------------------------------
 st.set_page_config(
     page_title="Hunter Status Window",
     page_icon="⚡",
@@ -140,11 +137,10 @@ st.markdown(
 )
 
 # ---------------------------------------------------------
-# Live Data Fetching via Streamlit Secrets
+# Live Data Sync
 # ---------------------------------------------------------
 @st.cache_data(ttl=30)
 def load_live_data():
-    # Read user_id & token supporting case variations
     user_id = st.secrets.get("HABITICA_USER_ID") or st.secrets.get("habitica_user_id")
     api_token = st.secrets.get("HABITICA_API_TOKEN") or st.secrets.get("habitica_api_token")
     
@@ -153,23 +149,17 @@ def load_live_data():
             raw_data = habitica_api.fetch_user_data(user_id, api_token)
             return stats_engine.calculate_stats(raw_data)
         except Exception as e:
-            st.warning(f"Live Sync Notice: {e}")
+            st.error(f"Sync error: {e}")
 
-    # Local fallback
-    try:
-        import data_store
-        return data_store.load_data()["stats"]
-    except Exception:
-        return stats_engine.new_stat_block()
+    return stats_engine.new_stat_block()
 
 stats_block = load_live_data()
 
-# Calculate Overall Player Level and Rank
 current_overall_level = stats_engine.overall_level(stats_block)
 player_rank = get_rank(current_overall_level)
 
 # ---------------------------------------------------------
-# Header & Player Level Banner
+# UI Render
 # ---------------------------------------------------------
 st.markdown(
     f"""<div class="status-card"><div class="status-title">SYSTEM STATUS</div><div class="status-level">LVL {current_overall_level:02d}</div><div class="status-rank">[{player_rank}]</div></div>""",
@@ -178,9 +168,6 @@ st.markdown(
 
 st.markdown('<div class="section-title">ATTRIBUTES</div>', unsafe_allow_html=True)
 
-# ---------------------------------------------------------
-# Compact Grid using Streamlit Columns
-# ---------------------------------------------------------
 cols = st.columns(2)
 
 for idx, stat_name in enumerate(stats_engine.STATS):
