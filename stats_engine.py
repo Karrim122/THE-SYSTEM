@@ -1,8 +1,7 @@
 """
 Core leveling logic for the Hunter Status Window.
 
-Calculates stats by loading baseline levels/progress from data.json (or local state)
-and incrementing them based on live API task counts.
+Loads baseline levels from data.json and adds live API increments on top without double-counting.
 """
 
 import json
@@ -42,16 +41,34 @@ def new_stat_block():
 
 
 def load_base_stats():
-    """Loads initial baseline stats from data.json if available."""
+    """
+    Loads baseline stats from data.json.
+    Deducts 1 level from Discipline and Deep Focus to prevent double-counting
+    their historical progress when live habit counters are processed.
+    """
+    stats_block = new_stat_block()
+    
     if os.path.exists("data.json"):
         try:
             with open("data.json", "r") as f:
                 data = json.load(f)
                 if "stats" in data:
-                    return data["stats"]
+                    raw_stats = data["stats"]
+                    for stat in STATS:
+                        if stat in raw_stats:
+                            stats_block[stat]["level"] = raw_stats[stat].get("level", 1)
+                            stats_block[stat]["progress"] = raw_stats[stat].get("progress", 0.0)
+                    
+                    # Prevent double-counting offset from live active tasks
+                    if stats_block["Discipline"]["level"] > 1:
+                        stats_block["Discipline"]["level"] -= 1
+                    if stats_block["Deep Focus"]["level"] > 1:
+                        stats_block["Deep Focus"]["level"] -= 1
+                        
         except Exception:
             pass
-    return new_stat_block()
+
+    return stats_block
 
 
 def apply_progress(stats_block, stat_name, increment, direction="up"):
@@ -106,7 +123,6 @@ def match_stat_from_tags(tag_ids, tag_id_to_name):
 
 def calculate_stats(raw_data):
     """Calculates full stat block starting from data.json baseline levels."""
-    # Load base levels from data.json instead of resetting to level 1
     stats_block = load_base_stats()
 
     # Handle direct raw data dictionary format or fallback
