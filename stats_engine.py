@@ -1,11 +1,9 @@
 """
 Core leveling logic for the Hunter Status Window.
 
-Loads baseline levels from data.json and adds live API increments on top without double-counting.
+Calculates stats dynamically from Habitica API data.
+Every run starts from base level 1 to prevent double-counting saved files.
 """
-
-import json
-import os
 
 STATS = ["Discipline", "Deep Focus", "Activity", "Intelligence", "Hacking"]
 
@@ -38,37 +36,6 @@ def priority_to_difficulty(priority):
 
 def new_stat_block():
     return {stat: {"level": 1, "progress": 0.0} for stat in STATS}
-
-
-def load_base_stats():
-    """
-    Loads baseline stats from data.json.
-    Deducts 1 level from Discipline and Deep Focus to prevent double-counting
-    their historical progress when live habit counters are processed.
-    """
-    stats_block = new_stat_block()
-    
-    if os.path.exists("data.json"):
-        try:
-            with open("data.json", "r") as f:
-                data = json.load(f)
-                if "stats" in data:
-                    raw_stats = data["stats"]
-                    for stat in STATS:
-                        if stat in raw_stats:
-                            stats_block[stat]["level"] = raw_stats[stat].get("level", 1)
-                            stats_block[stat]["progress"] = raw_stats[stat].get("progress", 0.0)
-                    
-                    # Prevent double-counting offset from live active tasks
-                    if stats_block["Discipline"]["level"] > 1:
-                        stats_block["Discipline"]["level"] -= 1
-                    if stats_block["Deep Focus"]["level"] > 1:
-                        stats_block["Deep Focus"]["level"] -= 1
-                        
-        except Exception:
-            pass
-
-    return stats_block
 
 
 def apply_progress(stats_block, stat_name, increment, direction="up"):
@@ -122,17 +89,14 @@ def match_stat_from_tags(tag_ids, tag_id_to_name):
 
 
 def calculate_stats(raw_data):
-    """Calculates full stat block starting from data.json baseline levels."""
-    stats_block = load_base_stats()
-
-    # Handle direct raw data dictionary format or fallback
-    if isinstance(raw_data, dict) and "stats" in raw_data and isinstance(raw_data["stats"], dict) and "Discipline" in raw_data["stats"]:
-        return raw_data["stats"]
+    """Calculates full stat block dynamically starting from fresh Lvl 1 base."""
+    # Always start fresh at Level 1
+    stats_block = new_stat_block()
 
     tags = raw_data.get("tags", [])
     tag_id_to_name = {t["id"]: t["name"] for t in tags}
 
-    # Process Habits
+    # Process Habits (counterUp / counterDown)
     for task in raw_data.get("habits", []):
         stat = match_stat_from_tags(task.get("tags"), tag_id_to_name)
         if not stat:
@@ -147,7 +111,7 @@ def calculate_stats(raw_data):
         if counter_down > 0:
             apply_progress(stats_block, stat, DIFFICULTY_INCREMENT[difficulty] * counter_down, "down")
 
-    # Process Dailies
+    # Process Completed Dailies
     for task in raw_data.get("dailies", []):
         if task.get("completed"):
             stat = match_stat_from_tags(task.get("tags"), tag_id_to_name)
