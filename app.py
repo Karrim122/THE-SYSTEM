@@ -1,6 +1,6 @@
 import streamlit as st
-import data_store
 import stats_engine
+import habitica_api
 
 # ---------------------------------------------------------
 # Page Configuration & Styling
@@ -144,10 +144,21 @@ st.markdown(
 )
 
 # ---------------------------------------------------------
-# Load Data Store
+# Live Data Fetching via Streamlit Secrets
 # ---------------------------------------------------------
-app_data = data_store.load_data()
-stats_block = app_data["stats"]
+@st.cache_data(ttl=60)
+def load_live_data():
+    try:
+        user_id = st.secrets["HABITICA_USER_ID"]
+        api_token = st.secrets["HABITICA_API_TOKEN"]
+        raw_data = habitica_api.fetch_user_data(user_id, api_token)
+        return stats_engine.calculate_stats(raw_data)
+    except Exception:
+        # Fallback to local data store if secrets or API call fails
+        import data_store
+        return data_store.load_data()["stats"]
+
+stats_block = load_live_data()
 
 # Calculate Overall Player Level and Rank
 current_overall_level = stats_engine.overall_level(stats_block)
