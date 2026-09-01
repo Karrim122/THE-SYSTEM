@@ -48,3 +48,21 @@ class HabiticaClient:
             return []
         except Exception:
             return []
+
+
+def fetch_user_data(user_id, api_token):
+    """Fetches user, tags, habits, dailies, and todos in a single bundle."""
+    client = HabiticaClient(user_id, api_token)
+    user_info = client.get_user()
+    tags = client.get_tags()
+    habits = client.get_tasks("habits")
+    dailies = client.get_tasks("dailys")
+    todos = client.get_tasks("todos") + client.get_tasks("completedTodos")
+    
+    return {
+        "user": user_info,
+        "tags": tags,
+        "habits": habits,
+        "dailies": dailies,
+        "todos": todos,
+    }
