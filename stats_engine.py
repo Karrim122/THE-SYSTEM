@@ -1,16 +1,12 @@
 """
 Core leveling logic for the Hunter Status Window.
 
-Each stat starts at level 1. Every completion or reduction of a task tagged with
-that stat contributes or deducts a fractional "chunk" of progress toward levels:
-    - a HARD   task takes  5 completions to grant 1 full level (1/5  = 0.20)
-    - a MEDIUM task takes 10 completions to grant 1 full level (1/10 = 0.10)
-    - an EASY  task takes 20 completions to grant 1 full level (1/20 = 0.05)
-    - a TRIVIAL task takes 30 completions to grant 1 full level (1/30 = ~0.033)
-
-The overall Player Level is the weighted average of the five stat levels,
-rounded to the nearest whole number.
+Calculates stats by loading baseline levels/progress from data.json (or local state)
+and incrementing them based on live API task counts.
 """
+
+import json
+import os
 
 STATS = ["Discipline", "Deep Focus", "Activity", "Intelligence", "Hacking"]
 
@@ -43,6 +39,19 @@ def priority_to_difficulty(priority):
 
 def new_stat_block():
     return {stat: {"level": 1, "progress": 0.0} for stat in STATS}
+
+
+def load_base_stats():
+    """Loads initial baseline stats from data.json if available."""
+    if os.path.exists("data.json"):
+        try:
+            with open("data.json", "r") as f:
+                data = json.load(f)
+                if "stats" in data:
+                    return data["stats"]
+        except Exception:
+            pass
+    return new_stat_block()
 
 
 def apply_progress(stats_block, stat_name, increment, direction="up"):
@@ -96,9 +105,10 @@ def match_stat_from_tags(tag_ids, tag_id_to_name):
 
 
 def calculate_stats(raw_data):
-    """Calculates full stat block directly from raw Habitica API data."""
-    stats_block = new_stat_block()
-    
+    """Calculates full stat block starting from data.json baseline levels."""
+    # Load base levels from data.json instead of resetting to level 1
+    stats_block = load_base_stats()
+
     # Handle direct raw data dictionary format or fallback
     if isinstance(raw_data, dict) and "stats" in raw_data and isinstance(raw_data["stats"], dict) and "Discipline" in raw_data["stats"]:
         return raw_data["stats"]
@@ -112,10 +122,10 @@ def calculate_stats(raw_data):
         if not stat:
             continue
         difficulty = priority_to_difficulty(task.get("priority", 1))
-        
+
         counter_up = task.get("counterUp", 0) or 0
         counter_down = task.get("counterDown", 0) or 0
-        
+
         if counter_up > 0:
             apply_progress(stats_block, stat, DIFFICULTY_INCREMENT[difficulty] * counter_up, "up")
         if counter_down > 0:
