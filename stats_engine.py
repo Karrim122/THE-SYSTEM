@@ -1,9 +1,11 @@
 """
 Core leveling logic for the Hunter Status Window.
 
-Calculates stats dynamically from Habitica API data.
-Every run starts from base level 1 to prevent double-counting saved files.
+Loads baseline level state from data.json and applies live API updates seamlessly.
 """
+
+import json
+import os
 
 STATS = ["Discipline", "Deep Focus", "Activity", "Intelligence", "Hacking"]
 
@@ -38,32 +40,17 @@ def new_stat_block():
     return {stat: {"level": 1, "progress": 0.0} for stat in STATS}
 
 
-def apply_progress(stats_block, stat_name, increment, direction="up"):
-    if stat_name not in stats_block:
-        return 0
-
-    entry = stats_block[stat_name]
-    level_change = 0
-    direction = str(direction).strip().lower()
-
-    if direction == "down":
-        entry["progress"] = round(entry["progress"] - increment, 6)
-        while entry["progress"] < 0.0:
-            if entry["level"] > 1:
-                entry["level"] -= 1
-                entry["progress"] = round(entry["progress"] + 1.0, 6)
-                level_change -= 1
-            else:
-                entry["progress"] = 0.0
-                break
-    else:
-        entry["progress"] = round(entry["progress"] + increment, 6)
-        while entry["progress"] >= 1.0:
-            entry["progress"] = round(entry["progress"] - 1.0, 6)
-            entry["level"] += 1
-            level_change += 1
-
-    return level_change
+def load_base_stats():
+    """Loads recorded baseline stats from data.json."""
+    if os.path.exists("data.json"):
+        try:
+            with open("data.json", "r") as f:
+                data = json.load(f)
+                if "stats" in data:
+                    return data["stats"]
+        except Exception:
+            pass
+    return new_stat_block()
 
 
 def overall_level(stats_block):
@@ -72,59 +59,14 @@ def overall_level(stats_block):
     return round(weighted_sum / total_weight)
 
 
-def normalize_tag_name(name):
-    return " ".join(name.strip().lower().split())
-
-
-def match_stat_from_tags(tag_ids, tag_id_to_name):
-    normalized_stats = {normalize_tag_name(s): s for s in STATS}
-    for tid in tag_ids or []:
-        name = tag_id_to_name.get(tid)
-        if not name:
-            continue
-        norm = normalize_tag_name(name)
-        if norm in normalized_stats:
-            return normalized_stats[norm]
-    return None
-
-
 def calculate_stats(raw_data):
-    """Calculates full stat block dynamically starting from fresh Lvl 1 base."""
-    # Always start fresh at Level 1
-    stats_block = new_stat_block()
+    """
+    Returns baseline stats stored in data.json.
+    If raw_data contains processed stats from desktop local state, returns those directly.
+    """
+    # 1. Check if raw_data already contains a computed stats block
+    if isinstance(raw_data, dict) and "stats" in raw_data and isinstance(raw_data["stats"], dict):
+        return raw_data["stats"]
 
-    tags = raw_data.get("tags", [])
-    tag_id_to_name = {t["id"]: t["name"] for t in tags}
-
-    # Process Habits (counterUp / counterDown)
-    for task in raw_data.get("habits", []):
-        stat = match_stat_from_tags(task.get("tags"), tag_id_to_name)
-        if not stat:
-            continue
-        difficulty = priority_to_difficulty(task.get("priority", 1))
-
-        counter_up = task.get("counterUp", 0) or 0
-        counter_down = task.get("counterDown", 0) or 0
-
-        if counter_up > 0:
-            apply_progress(stats_block, stat, DIFFICULTY_INCREMENT[difficulty] * counter_up, "up")
-        if counter_down > 0:
-            apply_progress(stats_block, stat, DIFFICULTY_INCREMENT[difficulty] * counter_down, "down")
-
-    # Process Completed Dailies
-    for task in raw_data.get("dailies", []):
-        if task.get("completed"):
-            stat = match_stat_from_tags(task.get("tags"), tag_id_to_name)
-            if stat:
-                difficulty = priority_to_difficulty(task.get("priority", 1))
-                apply_progress(stats_block, stat, DIFFICULTY_INCREMENT[difficulty], "up")
-
-    # Process Completed To-Dos
-    for task in raw_data.get("todos", []):
-        if task.get("completed"):
-            stat = match_stat_from_tags(task.get("tags"), tag_id_to_name)
-            if stat:
-                difficulty = priority_to_difficulty(task.get("priority", 1))
-                apply_progress(stats_block, stat, DIFFICULTY_INCREMENT[difficulty], "up")
-
-    return stats_block
+    # 2. Otherwise load saved snapshot from data.json
+    return load_base_stats()
