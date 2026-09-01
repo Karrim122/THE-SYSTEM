@@ -12,7 +12,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Stat Colors and Display Name Maps matching desktop UI
 STAT_COLORS = {
     "Discipline": "#f43f5e",
     "Deep Focus": "#a855f7",
@@ -49,7 +48,6 @@ def get_rank(level: int) -> str:
 st.markdown(
     """
     <style>
-    /* Top margin spacing fix */
     .block-container {
         padding-top: 2.5rem !important;
         padding-bottom: 1rem !important;
@@ -63,7 +61,6 @@ st.markdown(
         font-family: 'Segoe UI', Roboto, sans-serif;
     }
     
-    /* Header Card Banner */
     .status-card {
         background: linear-gradient(135deg, #111827 0%, #0b0f19 100%);
         border: 1.5px solid #00d2ff;
@@ -110,7 +107,6 @@ st.markdown(
         letter-spacing: 1px;
     }
     
-    /* Compact Square Stat Box */
     .stat-card-square {
         background-color: #111827;
         border-radius: 8px;
@@ -146,17 +142,25 @@ st.markdown(
 # ---------------------------------------------------------
 # Live Data Fetching via Streamlit Secrets
 # ---------------------------------------------------------
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=30)
 def load_live_data():
+    # Read user_id & token supporting case variations
+    user_id = st.secrets.get("HABITICA_USER_ID") or st.secrets.get("habitica_user_id")
+    api_token = st.secrets.get("HABITICA_API_TOKEN") or st.secrets.get("habitica_api_token")
+    
+    if user_id and api_token:
+        try:
+            raw_data = habitica_api.fetch_user_data(user_id, api_token)
+            return stats_engine.calculate_stats(raw_data)
+        except Exception as e:
+            st.warning(f"Live Sync Notice: {e}")
+
+    # Local fallback
     try:
-        user_id = st.secrets["HABITICA_USER_ID"]
-        api_token = st.secrets["HABITICA_API_TOKEN"]
-        raw_data = habitica_api.fetch_user_data(user_id, api_token)
-        return stats_engine.calculate_stats(raw_data)
-    except Exception:
-        # Fallback to local data store if secrets or API call fails
         import data_store
         return data_store.load_data()["stats"]
+    except Exception:
+        return stats_engine.new_stat_block()
 
 stats_block = load_live_data()
 
@@ -175,7 +179,7 @@ st.markdown(
 st.markdown('<div class="section-title">ATTRIBUTES</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# Compact Grid using Streamlit Columns (Single-Line HTML)
+# Compact Grid using Streamlit Columns
 # ---------------------------------------------------------
 cols = st.columns(2)
 
