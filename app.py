@@ -181,6 +181,12 @@ def get_credentials():
     return user_id, api_token
 
 
+@st.cache_data(ttl=15)
+def cached_fetch_habitica_data(user_id, api_token):
+    """Caches Habitica API responses for 15s to prevent 429 Rate Limit errors."""
+    return habitica_api.fetch_user_data(user_id, api_token)
+
+
 def get_rank(level: int) -> str:
     if level < 5:
         return "E RANK"
@@ -308,7 +314,7 @@ def display_dashboard():
 
     if user_id and api_token:
         try:
-            raw_data = habitica_api.fetch_user_data(user_id, api_token)
+            raw_data = cached_fetch_habitica_data(user_id, api_token)
             if stats_engine and hasattr(stats_engine, "calculate_stats"):
                 try:
                     stats_block = stats_engine.calculate_stats(raw_data)
@@ -362,7 +368,7 @@ def display_dashboard():
 
 
 if hasattr(st, "fragment"):
-    @st.fragment(run_every=3)
+    @st.fragment(run_every=10)
     def live_dashboard():
         display_dashboard()
     live_dashboard()
