@@ -30,7 +30,7 @@ st.markdown(f"""
     /* Hide Streamlit default sidebar completely */
     [data-testid="stSidebarNav"], [data-testid="collapsedControl"] {{ display: none !important; }}
     
-    /* Compact Vertical Nav Buttons */
+    /* Small Control Buttons */
     div.stButton > button {{
         width: 100%;
         background-color: {sec_bg};
@@ -38,10 +38,10 @@ st.markdown(f"""
         border: 1px solid #1e293b;
         border-radius: 6px;
         font-weight: bold;
-        font-size: 12px;
+        font-size: 11px;
         letter-spacing: 0.5px;
-        padding: 8px 10px;
-        margin-bottom: 4px;
+        padding: 6px 8px;
+        margin-top: 2px;
         transition: all 0.2s ease;
     }}
     div.stButton > button:hover {{
@@ -68,6 +68,14 @@ st.markdown(f"""
     .level-badge {{ font-size: 42px; font-weight: 800; color: {primary_color}; text-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }}
     .rank-text {{ font-size: 16px; font-weight: bold; color: #f59e0b; }}
     .stat-card {{ background-color: #111827; border-radius: 8px; padding: 14px; text-align: center; border: 1px solid #1e293b; }}
+    .control-box {{ 
+        background-color: #111827; 
+        border-radius: 8px; 
+        padding: 12px; 
+        border: 1px solid #1e293b; 
+        text-align: center;
+        margin-bottom: 15px;
+    }}
     .metric-label {{ font-size: 11px; color: #64748b; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase; }}
     .metric-val {{ font-size: 20px; color: {primary_color}; font-weight: bold; }}
 </style>
@@ -187,78 +195,80 @@ def execute_sync(force=False):
 if config.HABITICA_USER_ID and config.HABITICA_API_TOKEN:
     execute_sync(force=False)
 
-# MAIN LAYOUT: Narrow Left Nav + Main Content Area
-left_nav, main_content = st.columns([0.8, 5.2])
+view_mode = st.session_state.view_mode
 
-with left_nav:
-    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-    if st.button("🏠 HUD", use_container_width=True):
+raw_level = stats_engine.overall_level(data["stats"]) + data.get("overall_level_offset", 0)
+effective_overall = max(1, int(raw_level))
+
+try:
+    rank_title = milestones.get_rank_title(effective_overall)
+except AttributeError:
+    rank_title = "E RANK"
+
+if view_mode == "🏠 HUD":
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.markdown('<div class="hud-header">[ PLAYER STATUS ]</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sub-header">▲ PLAYER LINK: ACTIVE | MIND MONARCH INTERFACE</div>', unsafe_allow_html=True)
+    with col2:
+        st.markdown(
+            f'<div style="text-align: right;"><span class="level-badge">LVL. {effective_overall:02d}</span><br><span class="rank-text">[{rank_title}]</span></div>',
+            unsafe_allow_html=True
+        )
+
+    hp, max_hp = data.get("hp", 50.0), data.get("max_hp", 50.0)
+    st.markdown(f"**[ HP ] VITALITY:** `{hp:.1f} / {max_hp:.0f}`")
+    st.progress(max(0.0, min(1.0, hp / max_hp)) if max_hp > 0 else 0)
+    st.markdown("---")
+
+    grid_cols = st.columns(3)
+    for idx, stat_name in enumerate(stats_engine.STATS):
+        entry = data["stats"][stat_name]
+        color = STAT_COLORS.get(stat_name, "#00d2ff")
+        stat_lvl = int(entry["level"])
+        
+        try:
+            stat_rank = milestones.get_stat_rank(stat_name, stat_lvl)
+        except AttributeError:
+            stat_rank = f"{rank_title}"
+
+        with grid_cols[idx % 3]:
+            st.markdown(f"""
+            <div class="stat-card" style="border-top: 3px solid {color}; margin-bottom: 15px;">
+                <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
+                <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
+                <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.progress(min(1.0, max(0.0, float(entry["progress"]))))
+
+    # 6th Slot in Grid: Embedded Compact Control Panel under Physical
+    with grid_cols[2]:
+        st.markdown('<div class="control-box">', unsafe_allow_html=True)
+        st.markdown('<div style="font-size: 10px; color: #64748b; font-weight: bold; margin-bottom: 6px;">⚙️ SYSTEM NAVIGATION</div>', unsafe_allow_html=True)
+        
+        btn_c1, btn_c2 = st.columns(2)
+        with btn_c1:
+            if st.button("📜 LEDGER", use_container_width=True):
+                st.session_state.view_mode = "📜 LEDGER"
+                st.rerun()
+        with btn_c2:
+            if st.button("📊 STATS", use_container_width=True):
+                st.session_state.view_mode = "📊 STATS"
+                st.rerun()
+                
+        if st.button("🔄 SYNC", use_container_width=True):
+            execute_sync(force=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+else:
+    # Back button for LEDGER and STATS sub-pages
+    if st.button("🔙 BACK TO HUD"):
         st.session_state.view_mode = "🏠 HUD"
         st.rerun()
 
-    if st.button("📜 LEDGER", use_container_width=True):
-        st.session_state.view_mode = "📜 LEDGER"
-        st.rerun()
-
-    if st.button("📊 STATS", use_container_width=True):
-        st.session_state.view_mode = "📊 STATS"
-        st.rerun()
-
-    st.markdown("<hr style='margin: 8px 0; border-color: #1e293b;'>", unsafe_allow_html=True)
-
-    if st.button("🔄 SYNC", use_container_width=True):
-        execute_sync(force=True)
-
-with main_content:
-    view_mode = st.session_state.view_mode
-
-    # Safe level and rank evaluation
-    raw_level = stats_engine.overall_level(data["stats"]) + data.get("overall_level_offset", 0)
-    effective_overall = max(1, int(raw_level))
-
-    try:
-        rank_title = milestones.get_rank_title(effective_overall)
-    except AttributeError:
-        rank_title = "E RANK"
-
-    if view_mode == "🏠 HUD":
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            st.markdown('<div class="hud-header">[ PLAYER STATUS ]</div>', unsafe_allow_html=True)
-            st.markdown('<div class="sub-header">▲ PLAYER LINK: ACTIVE | MIND MONARCH INTERFACE</div>', unsafe_allow_html=True)
-        with col2:
-            st.markdown(
-                f'<div style="text-align: right;"><span class="level-badge">LVL. {effective_overall:02d}</span><br><span class="rank-text">[{rank_title}]</span></div>',
-                unsafe_allow_html=True
-            )
-
-        hp, max_hp = data.get("hp", 50.0), data.get("max_hp", 50.0)
-        st.markdown(f"**[ HP ] VITALITY:** `{hp:.1f} / {max_hp:.0f}`")
-        st.progress(max(0.0, min(1.0, hp / max_hp)) if max_hp > 0 else 0)
-        st.markdown("---")
-
-        grid_cols = st.columns(3)
-        for idx, stat_name in enumerate(stats_engine.STATS):
-            entry = data["stats"][stat_name]
-            color = STAT_COLORS.get(stat_name, "#00d2ff")
-            stat_lvl = int(entry["level"])
-            
-            try:
-                stat_rank = milestones.get_stat_rank(stat_name, stat_lvl)
-            except AttributeError:
-                stat_rank = f"{rank_title}"
-
-            with grid_cols[idx % 3]:
-                st.markdown(f"""
-                <div class="stat-card" style="border-top: 3px solid {color}; margin-bottom: 15px;">
-                    <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
-                    <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
-                    <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
-                </div>
-                """, unsafe_allow_html=True)
-                st.progress(min(1.0, max(0.0, float(entry["progress"]))))
-
-    elif view_mode == "📜 LEDGER":
+    if view_mode == "📜 LEDGER":
+        st.markdown('<div class="hud-header">[ ABILITY LEDGER ]</div><br>', unsafe_allow_html=True)
         for stat in stats_engine.STATS:
             curr_lvl = int(data["stats"][stat]["level"])
             st.markdown(f"#### ◈ {STAT_DISPLAY_NAMES.get(stat, stat).upper()} (Lv.{curr_lvl})")
@@ -273,8 +283,7 @@ with main_content:
                 st.markdown(f"*{'✅' if unlocked else '🔒'}* **LV {lvl:02d} - {title.upper()}**: {desc}")
 
     elif view_mode == "📊 STATS":
-        st.markdown('<div class="hud-header">[ SYSTEM ANALYTICS ]</div>', unsafe_allow_html=True)
-        st.markdown('<br>', unsafe_allow_html=True)
+        st.markdown('<div class="hud-header">[ SYSTEM ANALYTICS ]</div><br>', unsafe_allow_html=True)
 
         total_pts = sum(int(data["stats"][s]["level"]) for s in stats_engine.STATS)
         
