@@ -1,24 +1,24 @@
 {
   "stats": {
     "Discipline": {
-      "level": 3,
-      "progress": 0.85
+      "level": 4,
+      "progress": 0.35
     },
     "Deep Focus": {
-      "level": 3,
-      "progress": 0.8
+      "level": 5,
+      "progress": 0.15
     },
     "Activity": {
       "level": 3,
-      "progress": 0.05
+      "progress": 0.65
     },
     "Intelligence": {
-      "level": 4,
-      "progress": 0.3
+      "level": 5,
+      "progress": 0.05
     },
     "Hacking": {
-      "level": 2,
-      "progress": 0.25
+      "level": 3,
+      "progress": 0.1
     }
   },
   "tasks": {
@@ -31,7 +31,7 @@
       "counterDown": 0
     },
     "BF7C9479-1D73-42F3-A08F-B4126234BB70": {
-      "counterUp": 2,
+      "counterUp": 1,
       "counterDown": 0
     },
     "256E3D37-CB81-4446-B4A7-547003193C14": {
@@ -43,15 +43,15 @@
       "counterDown": 2
     },
     "72CC76EF-3E6B-4170-814E-D439FCABCF08": {
-      "counterUp": 1,
-      "counterDown": 2
+      "counterUp": 0,
+      "counterDown": 0
     },
     "BFF9B6C7-57AD-4A67-84B7-E86714E17233": {
       "counterUp": 0,
-      "counterDown": 1
+      "counterDown": 0
     },
     "C3385CC9-B50F-4AFD-9AEC-2E7B3D84EB2C": {
-      "lastCreditedDate": "2026-08-30"
+      "lastCreditedDate": "2026-09-05"
     },
     "C6AE746D-4718-4E50-880D-97D4BA7D34D5": {
       "lastCreditedDate": "2026-08-22"
@@ -63,7 +63,7 @@
       "lastCreditedDate": "2026-08-28"
     },
     "AB21F5F3-FEB3-4475-B178-7ED49FD32912": {
-      "lastCreditedDate": "2026-09-01"
+      "lastCreditedDate": "2026-09-02"
     },
     "5113397C-0D9D-4476-944C-F68A551AD32C": {
       "lastCreditedDate": "2026-08-29"
@@ -128,8 +128,8 @@
       "credited": true
     },
     "DDD86489-B239-49DD-87EF-74968E3C0CD9": {
-      "counterUp": 3,
-      "counterDown": 4
+      "counterUp": 0,
+      "counterDown": 0
     },
     "8b453e25-df4f-4a96-b372-4ee540ec33e8": {
       "credited": true
@@ -147,7 +147,7 @@
       "credited": true
     },
     "C09FF33E-1571-4C6C-8C20-DB926CD1467F": {
-      "lastCreditedDate": "2026-09-01"
+      "lastCreditedDate": "2026-09-07"
     },
     "0fa01a85-9a44-44a5-a82d-fca5f0474e8d": {
       "credited": true
@@ -166,21 +166,21 @@
       "credited": true
     },
     "C1B70A2B-8C40-49A4-AE8F-9A045B489411": {
-      "lastCreditedDate": "2026-09-01"
+      "lastCreditedDate": "2026-09-03"
     },
     "85DA05E9-F7E6-4D02-8D15-EEEFC5DB8D12": {
-      "counterUp": 1,
+      "counterUp": 0,
       "counterDown": 0
     },
     "FA9DDCB2-B362-4870-B914-A43DE76A8BDD": {
-      "counterUp": 1,
+      "counterUp": 0,
       "counterDown": 0
     },
     "EA6FA4E2-8998-438E-B0D9-E5A3103390A4": {
-      "lastCreditedDate": "2026-09-01"
+      "lastCreditedDate": "2026-09-07"
     },
     "0FF30EC6-DD8E-4E7E-A98C-3E660863A4F7": {
-      "lastCreditedDate": "2026-09-01"
+      "lastCreditedDate": "2026-09-03"
     },
     "421C3511-9685-45B6-A8AB-2B9A5B6C97EF": {
       "credited": true
@@ -189,7 +189,7 @@
       "credited": true
     },
     "4D731A3C-BCB0-4570-BBD5-3EBF7144E2E7": {
-      "counterUp": 1,
+      "counterUp": 0,
       "counterDown": 0
     },
     "01D0B326-DD76-493C-BD52-FC37BA2BB60C": {
@@ -202,18 +202,139 @@
     "9467BF08-9949-41BE-9312-B204F069B375": {
       "credited": true
     },
-    "1308A3A3-C26E-4D7C-94D9-A03B85EE2A31": {},
+    "1308A3A3-C26E-4D7C-94D9-A03B85EE2A31": {
+      "credited": true
+    },
     "85074681-4514-438a-b961-2623ceebe35d": {
       "credited": true
     },
     "34A53563-FB32-47AF-9BBC-95DCF1891348": {
       "credited": true
     },
-    "DA35CB7D-2C10-4A00-B7F0-D504969DCC2C": {},
+    "DA35CB7D-2C10-4A00-B7F0-D504969DCC2C": {
+      "lastCreditedDate": "2026-09-05"
+    },
     "EEB984F6-CF27-49FC-A845-FD0302AD2F83": {},
-    "958790D7-8781-4FA7-A637-EAD620930C19": {}
+    "958790D7-8781-4FA7-A637-EAD620930C19": {
+      "credited": true
+    },
+    "B6E3A92D-1127-4D15-9176-674BBB20D2A0": {},
+    "19AE695D-1546-48F7-A87A-5933972E0169": {},
+    "160F4FA2-E05F-4044-A5CA-D78ADD419109": {
+      "credited": true
+    },
+    "8C3FE3D1-9A99-47ED-AF16-46B58895C793": {},
+    "b95a7088-8798-45a9-ba7c-30c42e25387f": {
+      "credited": true
+    },
+    "f489bfc3-ac5a-402e-ae4d-6d0a4225f110": {},
+    "4193D9EE-9E33-4C98-BA9E-0BC1FEC8B6C4": {
+      "credited": true
+    },
+    "3ead9aeb-ca7d-403c-b34b-b4e96df5b6bb": {
+      "credited": true
+    },
+    "BD040231-4A3D-4F4F-A1CE-5421EFA8DC6C": {
+      "counterUp": 0,
+      "counterDown": 0
+    },
+    "9196AAEA-B370-4F69-82A0-5CA50F9370EA": {
+      "counterUp": 0,
+      "counterDown": 0
+    },
+    "36D5E3D7-F8C4-4D61-8CE1-8BDDC6878580": {
+      "counterUp": 2,
+      "counterDown": 1
+    },
+    "6C866E80-A14D-4D1B-ABDB-57F46BC8F6B9": {
+      "counterUp": 0,
+      "counterDown": 0
+    },
+    "49C6BECD-A5C2-47AA-A88A-9F668A5E18D0": {
+      "counterUp": 0,
+      "counterDown": 0
+    },
+    "8185AB54-08D6-432D-BED1-164E7F683323": {},
+    "e82254e8-2758-47b7-a271-617d209580a5": {
+      "credited": true
+    },
+    "548d8c57-150e-40dc-902f-ad91980d747f": {
+      "credited": true
+    },
+    "dc17217f-4bf3-4f9e-89ea-844cb6ef2b16": {
+      "credited": true
+    },
+    "D42CF3B1-44A2-48A5-B580-8A66E821A4FA": {},
+    "716202CD-C1BD-44B4-8783-4F7E8C2554CF": {
+      "credited": true
+    },
+    "8d6dec9d-e7b9-459e-949c-2cc5f895d325": {},
+    "cc085d4f-593e-4d2e-8606-f2436207f160": {
+      "credited": true
+    }
   },
   "log": [
+    "[2026-09-07] Quest Objective 'freelancing' cleared -> +Career EXP [LEVEL UP! Career is now Lv.3]",
+    "[2026-09-07] Daily Quest '\ud83d\udcddDay targets plan ' cleared -> +Discipline EXP",
+    "[2026-09-07] Quest Action '\u23f3Focus session' x1 -> +Deep Focus EXP",
+    "[2026-09-07] Daily Quest '\ud83e\uddd8\ud83c\udffbMeditation ' cleared -> +Deep Focus EXP [LEVEL UP! Deep Focus is now Lv.5]",
+    "[2026-09-07] Penalty Action '\ud83d\udecf\ufe0fSleep quality' x1 -> -Physical EXP",
+    "[2026-09-07] Quest Action '\ud83d\udecf\ufe0fSleep quality' x1 -> +Physical EXP",
+    "[2026-09-06] Penalty Action '\ud83d\udd34Distraction ' x2 -> -Discipline EXP",
+    "[2026-09-06] Quest Action '\u265f\ufe0fChess' x1 -> +Intelligence EXP [LEVEL UP! Intelligence is now Lv.5]",
+    "[2026-09-06] Quest Action '\u26a1\ufe0fFocus regian' x1 -> +Deep Focus EXP",
+    "[2026-09-06] Quest Objective 'DP task' cleared -> +Deep Focus EXP",
+    "[2026-09-06] Quest Objective 'Tawba' cleared -> +Discipline EXP",
+    "[2026-09-06] Daily Quest '\ud83d\udcddDay targets plan ' cleared -> +Discipline EXP",
+    "[2026-09-06] Daily Quest '\ud83e\uddd8\ud83c\udffbMeditation ' cleared -> +Deep Focus EXP",
+    "[2026-09-06] Quest Action '\ud83d\udecf\ufe0fSleep quality' x1 -> +Physical EXP",
+    "[2026-09-06] Penalty Action '\ud83d\udd34Distraction ' x1 -> -Discipline EXP",
+    "[2026-09-06] Quest Action '\u26a1\ufe0fFocus regian' x1 -> +Deep Focus EXP",
+    "[2026-09-05] Quest Objective 'The system' cleared -> +Deep Focus EXP",
+    "[2026-09-05] Quest Objective 'summarize the habits system  levels' cleared -> +Deep Focus EXP",
+    "[2026-09-05] Quest Objective 'summarize the triggers ' cleared -> +Discipline EXP",
+    "[2026-09-05] Quest Objective 'calendar' cleared -> +Discipline EXP",
+    "[2026-09-05] Quest Action '\u265f\ufe0fChess' x1 -> +Intelligence EXP",
+    "[2026-09-05] Quest Action '\u23f3Focus session' x1 -> +Deep Focus EXP",
+    "[2026-09-05] Daily Quest '\ud83d\udcf4Phone off at morning' cleared -> +Discipline EXP",
+    "[2026-09-05] Daily Quest '\u2600\ufe0fWake up early' cleared -> +Discipline EXP",
+    "[2026-09-04] Quest Objective 'freelancing ' cleared -> +Career EXP",
+    "[2026-09-04] Penalty Action '\ud83d\udd34Distraction ' x1 -> -Deep Focus EXP",
+    "[2026-09-04] Penalty Action '\u26a1\ufe0f\ud83d\udcf5Consciousness-distraction' x1 -> -Discipline EXP",
+    "[2026-09-04] Quest Objective '\u26bd\ufe0fScore 3 goals' cleared -> +Physical EXP",
+    "[2026-09-04] Daily Quest '\ud83d\udcf4Phone off at morning' cleared -> +Discipline EXP",
+    "[2026-09-04] Daily Quest '\u2600\ufe0fWake up early' cleared -> +Discipline EXP",
+    "[2026-09-04] Penalty Action '\ud83d\udd34Distraction ' x1 -> -Deep Focus EXP",
+    "[2026-09-03] Daily Quest '\ud83e\uddd1\u200d\ud83d\udcbbCareer' cleared -> +Hacking EXP",
+    "[2026-09-03] Quest Action '\ud83d\udd34Distraction ' x1 -> +Deep Focus EXP",
+    "[2026-09-03] Quest Action '\u23f3Focus session' x2 -> +Deep Focus EXP",
+    "[2026-09-03] Quest Action '\ud83d\udcafExecute ' x2 -> +Discipline EXP",
+    "[2026-09-03] Quest Action '\ud83d\udcbbPractical work' x1 -> +Hacking EXP",
+    "[2026-09-03] Quest Action '\u265f\ufe0fChess' x1 -> +Intelligence EXP",
+    "[2026-09-03] Quest Action '\ud83e\udde0Mental session' x1 -> +Intelligence EXP",
+    "[2026-09-03] Quest Action '\ud83d\udcafExecute ' x2 -> +Discipline EXP [LEVEL UP! Discipline is now Lv.4]",
+    "[2026-09-03] Penalty Action '\u26a1\ufe0f\ud83d\udcf5Consciousness-distraction' x1 -> -Discipline EXP [LEVEL DOWN! Discipline is now Lv.3]",
+    "[2026-09-03] Daily Quest '\ud83d\udcddDay plan ' cleared -> +Discipline EXP",
+    "[2026-09-03] Daily Quest '\ud83d\udcd6Reading ' cleared -> +Intelligence EXP",
+    "[2026-09-03] Daily Quest '\ud83e\uddd8\ud83c\udffbMeditation ' cleared -> +Deep Focus EXP",
+    "[2026-09-03] Quest Action '\ud83d\udcaaExercise ' x1 -> +Physical EXP",
+    "[2026-09-03] Daily Quest '\ud83d\udcf4Phone off at morning' cleared -> +Discipline EXP [LEVEL UP! Discipline is now Lv.4]",
+    "[2026-09-03] Penalty Action '\ud83d\udcf5Without a reward' x1 -> -Discipline EXP [LEVEL DOWN! Discipline is now Lv.3]",
+    "[2026-09-03] Penalty Action '\ud83d\udd34Distraction ' x1 -> -Deep Focus EXP",
+    "[2026-09-03] Quest Action '\ud83d\udcaaExercise ' x1 -> +Physical EXP",
+    "[2026-09-02] Daily Quest '\ud83d\udcf4Phone off at morning' cleared -> +Discipline EXP [LEVEL UP! Discipline is now Lv.4]",
+    "[2026-09-02] Penalty Action '\ud83d\udcafExecute ' x1 -> -Discipline EXP [LEVEL DOWN! Discipline is now Lv.3]",
+    "[2026-09-02] Daily Quest '\ud83c\udfc3Activity ' cleared -> +Physical EXP",
+    "[2026-09-02] Daily Quest '\ud83d\udcd6Reading ' cleared -> +Intelligence EXP",
+    "[2026-09-02] Daily Quest '\ud83e\uddd1\u200d\ud83d\udcbbCareer' cleared -> +Career EXP",
+    "[2026-09-02] Daily Quest '\ud83d\udcddDay plan' cleared -> +Discipline EXP [LEVEL UP! Discipline is now Lv.4]",
+    "[2026-09-02] Daily Quest '\ud83e\uddd8\ud83c\udffbMeditation ' cleared -> +Deep Focus EXP",
+    "[2026-09-01] Penalty Action '\ud83d\udcafExecute ' x1 -> -Discipline EXP [LEVEL DOWN! Discipline is now Lv.3]",
+    "[2026-09-01] Quest Action '\ud83d\udd34Distraction ' x1 -> +Deep Focus EXP [LEVEL UP! Deep Focus is now Lv.4]",
+    "[2026-09-01] Quest Action '\ud83d\udcafExecute ' x1 -> +Discipline EXP [LEVEL UP! Discipline is now Lv.4]",
+    "[2026-09-01] Quest Objective 'Gp study 1' cleared -> +Deep Focus EXP",
+    "[2026-09-01] Quest Objective 'App.py' cleared -> +Deep Focus EXP",
+    "[2026-09-01] Quest Action '\ud83d\udcafExecute ' x1 -> +Discipline EXP",
     "[2026-09-01] Quest Action '\u23f3Focus session' x1 -> +Deep Focus EXP",
     "[2026-09-01] Penalty Action '\ud83d\udcafExecute ' x1 -> -Discipline EXP",
     "[2026-09-01] Penalty Action '\ud83d\udcafExecute ' x1 -> -Discipline EXP [LEVEL DOWN! Discipline is now Lv.3]",
@@ -252,71 +373,10 @@
     "[2026-08-31] Quest Action '\u23f0Focus session' x1 -> +Deep Focus EXP",
     "[2026-08-31] Penalty Action '\ud83d\udcafExecute ' x1 -> -Discipline EXP",
     "[2026-08-31] Quest Action '\ud83d\udcafExecute ' x1 -> +Discipline EXP",
-    "[2026-08-31] Daily Quest '\ud83e\uddd8\ud83c\udffbMeditation ' cleared -> +Deep Focus EXP",
-    "[2026-08-31] Daily Quest '\ud83d\udcddDay plan' cleared -> +Discipline EXP",
-    "[2026-08-31] Quest Objective 'Tawba' cleared -> +Discipline EXP",
-    "[2026-08-31] Quest Action '\ud83e\udde0Mental session' x1 -> +Intelligence EXP",
-    "[2026-08-30] Quest Objective 'how to do ' cleared -> +Discipline EXP",
-    "[2026-08-30] Penalty Action '\ud83d\udd34Distraction ' x1 -> -Discipline EXP",
-    "[2026-08-30] Penalty Action '\ud83d\udd34Distraction ' x1 -> -Discipline EXP",
-    "[2026-08-30] Daily Quest '\ud83c\udfc3Activity ' cleared -> +Physical EXP",
-    "[2026-08-30] Quest Action '\ud83d\udd34Distraction ' x1 -> +Discipline EXP",
-    "[2026-08-30] Quest Objective 'what to do ' cleared -> +Intelligence EXP",
-    "[2026-08-30] Daily Quest '\u2600\ufe0fWake up early' cleared -> +Discipline EXP",
-    "[2026-08-30] Penalty Action '\ud83e\udd57Nutrition' x2 -> -Physical EXP",
-    "[2026-08-29] Daily Quest '\u265f\ufe0fChess' cleared -> +Intelligence EXP",
-    "[2026-08-29] Daily Quest '\ud83d\udcddDay plan\ud83d\udcaf' cleared -> +Discipline EXP",
-    "[2026-08-29] Penalty Action '\ud83d\udcf5Scrolling' x1 -> -Deep Focus EXP",
-    "[2026-08-29] Penalty Action '\ud83d\udd34Distraction ' x2 -> -Discipline EXP",
-    "[2026-08-29] Quest Action '\ud83d\udd34Distraction ' x2 -> +Discipline EXP",
-    "[2026-08-29] Quest Action '\ud83d\udcd6Read ' x1 -> +Intelligence EXP",
-    "[2026-08-29] Quest Action '\ud83e\uddd8Meditation ' x1 -> +Deep Focus EXP",
-    "[2026-08-29] Penalty Action '\u2747\ufe0fCommit ' x1 -> -Discipline EXP",
-    "[2026-08-29] Quest Action '\u2747\ufe0fCommit ' x2 -> +Discipline EXP",
-    "[2026-08-29] Quest Objective '\u26bd\ufe0fMatch' cleared -> +Physical EXP",
-    "[2026-08-29] Quest Objective '\u26bd\ufe0fScore 3 goals' cleared -> +Physical EXP",
-    "[2026-08-28] Quest Action '\u23f0Focus time' x1 -> +Deep Focus EXP [LEVEL UP! Deep Focus is now Lv.3]",
-    "[2026-08-28] Penalty Action '\u23f0Focus time' x1 -> -Deep Focus EXP [LEVEL DOWN! Deep Focus is now Lv.2]",
-    "[2026-08-28] Daily Quest '\ud83d\udedcCCNA course' cleared -> +Career EXP [LEVEL UP! Career is now Lv.2]",
-    "[2026-08-28] Quest Action '\u23f0Focus time' x1 -> +Deep Focus EXP [LEVEL UP! Deep Focus is now Lv.3]",
-    "[2026-08-28] Quest Action '\u2747\ufe0fCommit ' x1 -> +Discipline EXP",
-    "[2026-08-28] Quest Action '\ud83e\uddd8Meditation ' x1 -> +Deep Focus EXP",
-    "[2026-08-28] Quest Action '\u2747\ufe0fCommit ' x1 -> +Discipline EXP",
-    "[2026-08-28] Quest Action '\u23f0Focus time' x1 -> +Deep Focus EXP",
-    "[2026-08-28] Quest Objective 'stats levels and leveling ' cleared -> +Intelligence EXP",
-    "[2026-08-28] Quest Objective 'levels meanings ' cleared -> +Discipline EXP",
-    "[2026-08-28] Quest Action '\u23f0Focus time' x1 -> +Deep Focus EXP",
-    "[2026-08-28] Daily Quest '\u231b\ufe0fFocus block on one thing' cleared -> +Deep Focus EXP",
-    "[2026-08-28] Daily Quest '\ud83d\udcddDay plan' cleared -> +Discipline EXP",
-    "[2026-08-28] Daily Quest '\u2600\ufe0fWake up early' cleared -> +Discipline EXP [LEVEL UP! Discipline is now Lv.3]",
-    "[2026-08-28] Quest Action '\u2747\ufe0fCommit ' x1 -> +Discipline EXP",
-    "[2026-08-28] Quest Objective '\u26bd\ufe0fWarm up' cleared -> +Activity EXP",
-    "[2026-08-28] Quest Objective '\u26bd\ufe0fScore 3 goals' cleared -> +Activity EXP",
-    "[2026-08-27] Quest Action '\ud83d\udcd6Read' x1 -> +Intelligence EXP [LEVEL UP! Intelligence is now Lv.3]",
-    "[2026-08-27] Quest Action '\ud83e\udd57Nutrition' x1 -> +Activity EXP",
-    "[2026-08-27] Quest Objective 'each habit time ' cleared -> +Discipline EXP",
-    "[2026-08-27] Quest Action '\u2747\ufe0fCommit ' x1 -> +Discipline EXP",
-    "[2026-08-27] Quest Objective 'git hub' cleared -> +Deep Focus EXP",
-    "[2026-08-27] Quest Action '\ud83d\udd34Distraction ' x1 -> +Discipline EXP",
-    "[2026-08-27] Quest Objective '\u0627\u0644\u062a\u0643\u064a\u0641' cleared -> +Discipline EXP",
-    "[2026-08-27] Daily Quest '\u265f\ufe0fChess' cleared -> +Intelligence EXP",
-    "[2026-08-27] Daily Quest '\ud83c\udfc3Activity ' cleared -> +Activity EXP",
-    "[2026-08-27] Daily Quest '\u231b\ufe0fFocus block' cleared -> +Deep Focus EXP",
-    "[2026-08-27] Penalty Action '\ud83e\udd57Nutrition' x1 -> -Activity EXP",
-    "[2026-08-27] Quest Action '\ud83e\udd57Nutrition' x1 -> +Activity EXP",
-    "[2026-08-26] Quest Objective 'Linkedin' cleared -> +Hacking EXP",
-    "[2026-08-26] Daily Quest '\ud83c\udfc3Activity ' cleared -> +Activity EXP [LEVEL UP! Activity is now Lv.2]",
-    "[2026-08-26] Penalty Action '\ud83d\udcf5Scrolling' x1 -> -Deep Focus EXP",
-    "[2026-08-26] Penalty Action '\ud83d\udd34Distraction ' x2 -> -Discipline EXP",
-    "[2026-08-26] Quest Action '\ud83d\udd34Distraction ' x1 -> +Discipline EXP",
-    "[2026-08-26] Penalty Action '\ud83e\udd57Nutrition' x2 -> -Activity EXP",
-    "[2026-08-26] Quest Action '\ud83e\udd57Nutrition' x1 -> +Activity EXP",
-    "[2026-08-26] Quest Objective '\u062c\u062f \u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0644\u0644stats' cleared -> +Intelligence EXP",
-    "[2026-08-26] Daily Quest '\u231b\ufe0fFocus block' cleared -> +Deep Focus EXP",
-    "[2026-08-26] \u26a0\ufe0f Auto-sync failed: Unexpected system error: HTTPSConnectionPool(host='habitica.com', port=443): Max retries exceeded with url: /api/v3/user (Caused by ConnectTimeoutError(<HTTPSConnection(host='habitica.com', port=443) at 0x1faddaeae70>, 'Connection to habitica.com timed out. (connect timeout=15)'))"
+    "[2026-08-31] Daily Quest '\ud83e\uddd8\ud83c\udffbMeditation ' cleared -> +Deep Focus EXP"
   ],
-  "last_synced": "2026-09-01",
+  "last_synced": "2026-09-07",
   "overall_level_offset": 0,
-  "hp": 46.0,
+  "hp": 34.0,
   "max_hp": 50.0
 }
