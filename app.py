@@ -1,3 +1,4 @@
+import time
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 from datetime import date
@@ -57,18 +58,26 @@ STAT_DISPLAY_NAMES = {
     "Hacking": "Career",
 }
 
-# Auto-refresh heartbeat
-st_autorefresh(interval=15000, key="habitica_sync_heartbeat")
+# Auto-refresh heartbeat every 5 minutes (300,000 ms) to prevent API rate limiting
+st_autorefresh(interval=300000, key="habitica_sync_heartbeat")
 
 if "data" not in st.session_state:
     st.session_state.data = data_store.load_data()
 
+if "last_sync_timestamp" not in st.session_state:
+    st.session_state.last_sync_timestamp = 0
+
 data = st.session_state.data
 
 st.sidebar.title("⚡ SYSTEM CONTROL")
-view_mode = st.sidebar.radio("NAVIGATION", ["🏠 STATUS HUD", "📜 ABILITY LEDGER", "📜 SYSTEM LOGS"])
+view_mode = st.sidebar.radio("NAVIGATION", ["🏠 STATUS HUD", "📜 ABILITY LEDGER"])
 
-def execute_sync():
+def execute_sync(force=False):
+    current_time = time.time()
+    # Cooldown of 300 seconds (5 minutes) unless manually triggered
+    if not force and (current_time - st.session_state.last_sync_timestamp < 300):
+        return
+
     if not config.HABITICA_USER_ID or not config.HABITICA_API_TOKEN:
         st.sidebar.error("Credentials missing in config.json")
         return
@@ -143,12 +152,15 @@ def execute_sync():
 
         data["last_synced"] = today_str
         data_store.save_data(data)
+        st.session_state.last_sync_timestamp = current_time
         st.sidebar.success("SYNCHRONIZED WITH HABITICA")
     except HabiticaError as e:
         st.sidebar.error(f"Sync failed: {e}")
 
-if config.HABITICA_USER_ID and config.HABITICA_API_TOKEN:
-    execute_sync()
+if st.sidebar.button("🔄 MANUAL SYNC"):
+    execute_sync(force=True)
+elif config.HABITICA_USER_ID and config.HABITICA_API_TOKEN:
+    execute_sync(force=False)
 
 # Safe level and rank evaluation
 raw_level = stats_engine.overall_level(data["stats"]) + data.get("overall_level_offset", 0)
@@ -214,7 +226,3 @@ elif view_mode == "📜 ABILITY LEDGER":
         for lvl, title, desc in m_list:
             unlocked = curr_lvl >= lvl
             st.markdown(f"*{'✅' if unlocked else '🔒'}* **LV {lvl:02d} - {title.upper()}**: {desc}")
-
-elif view_mode == "📜 SYSTEM LOGS":
-    for l in data.get("log", [])[:30]:
-        st.code(l, language="text")
