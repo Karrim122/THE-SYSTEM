@@ -1,68 +1,37 @@
 import requests
 
 class HabiticaError(Exception):
-    """Custom exception for Habitica API errors."""
     pass
 
 class HabiticaClient:
+    BASE_URL = "https://habitica.com/api/v3"
+
     def __init__(self, user_id, api_token):
         self.user_id = user_id
         self.api_token = api_token
-        self.base_url = "https://habitica.com/api/v3"
         self.headers = {
             "x-api-user": self.user_id,
             "x-api-key": self.api_token,
-            "x-client": "Streamlit-SoloLeveling-StatusWindow"
+            "x-client": "HunterStatusApp-Streamlit",
         }
 
-    def get_user(self):
-        """Fetches core user profile and stats."""
-        url = f"{self.base_url}/user"
+    def _get(self, endpoint):
         try:
-            res = requests.get(url, headers=self.headers, timeout=10)
-            if res.status_code == 200:
-                return res.json().get("data", {})
-            else:
-                raise HabiticaError(f"API Error ({res.status_code}): {res.text}")
-        except Exception as e:
-            raise HabiticaError(f"Failed to connect to Habitica: {e}")
+            res = requests.get(f"{self.BASE_URL}/{endpoint}", headers=self.headers, timeout=10)
+            if res.status_code != 200:
+                raise HabiticaError(f"Habitica API Error ({res.status_code}): {res.text}")
+            data = res.json()
+            if not data.get("success"):
+                raise HabiticaError(data.get("message", "Unknown Habitica API Error"))
+            return data.get("data")
+        except requests.RequestException as e:
+            raise HabiticaError(f"Network connection error: {e}")
 
-    def get_tasks(self, task_type="habits"):
-        """Fetches tasks by type ('habits', 'dailys', 'todos')."""
-        url = f"{self.base_url}/tasks/user?type={task_type}"
-        try:
-            res = requests.get(url, headers=self.headers, timeout=10)
-            if res.status_code == 200:
-                return res.json().get("data", [])
-            return []
-        except Exception:
-            return []
+    def get_user(self):
+        return self._get("user")
 
     def get_tags(self):
-        """Fetches user tags to map attributes."""
-        url = f"{self.base_url}/tags"
-        try:
-            res = requests.get(url, headers=self.headers, timeout=10)
-            if res.status_code == 200:
-                return res.json().get("data", [])
-            return []
-        except Exception:
-            return []
+        return self._get("tags")
 
-
-def fetch_user_data(user_id, api_token):
-    """Fetches user, tags, habits, dailies, and todos in a single bundle."""
-    client = HabiticaClient(user_id, api_token)
-    user_info = client.get_user()
-    tags = client.get_tags()
-    habits = client.get_tasks("habits")
-    dailies = client.get_tasks("dailys")
-    todos = client.get_tasks("todos") + client.get_tasks("completedTodos")
-    
-    return {
-        "user": user_info,
-        "tags": tags,
-        "habits": habits,
-        "dailies": dailies,
-        "todos": todos,
-    }
+    def get_tasks(self, task_type="tasks"):
+        return self._get(f"tasks/user?type={task_type}")
