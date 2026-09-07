@@ -14,26 +14,33 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Custom Styling
+bg_color = config.THEME.get('backgroundColor', '#030712')
+sec_bg = config.THEME.get('secondaryBackgroundColor', '#0b0f19')
+text_color = config.THEME.get('textColor', '#f8fafc')
+primary_color = config.THEME.get('primaryColor', '#00d2ff')
+font_family = config.THEME.get('font', 'sans serif')
+
 st.markdown(f"""
 <style>
-    body {{ background-color: {config.THEME.get('backgroundColor', '#030712')}; color: {config.THEME.get('textColor', '#f8fafc')}; font-family: '{config.THEME.get('font', 'sans serif')}'; }}
-    .stApp {{ background-color: {config.THEME.get('backgroundColor', '#030712')}; }}
+    body {{ background-color: {bg_color}; color: {text_color}; font-family: '{font_family}'; }}
+    .stApp {{ background-color: {bg_color}; }}
     
     .status-card {{
-        background-color: {config.THEME.get('secondaryBackgroundColor', '#0b0f19')};
+        background-color: {sec_bg};
         border: 1px solid #1e293b;
         border-radius: 8px;
         padding: 18px;
         margin-bottom: 12px;
     }}
     
-    .hud-header {{ font-size: 24px; font-weight: bold; color: {config.THEME.get('primaryColor', '#00d2ff')}; letter-spacing: 1px; }}
+    .hud-header {{ font-size: 24px; font-weight: bold; color: {primary_color}; letter-spacing: 1px; }}
     .sub-header {{ font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 15px; }}
-    .level-badge {{ font-size: 42px; font-weight: 800; color: {config.THEME.get('primaryColor', '#00d2ff')}; text-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }}
+    .level-badge {{ font-size: 42px; font-weight: 800; color: {primary_color}; text-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }}
     .rank-text {{ font-size: 16px; font-weight: bold; color: #f59e0b; }}
     .stat-card {{ background-color: #111827; border-radius: 8px; padding: 14px; text-align: center; border: 1px solid #1e293b; }}
     .metric-label {{ font-size: 10px; color: #64748b; font-weight: bold; }}
-    .metric-val {{ font-size: 16px; color: {config.THEME.get('primaryColor', '#00d2ff')}; font-weight: bold; }}
+    .metric-val {{ font-size: 16px; color: {primary_color}; font-weight: bold; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -50,6 +57,7 @@ STAT_DISPLAY_NAMES = {
     "Hacking": "Career",
 }
 
+# Auto-refresh heartbeat
 st_autorefresh(interval=15000, key="habitica_sync_heartbeat")
 
 if "data" not in st.session_state:
@@ -84,7 +92,8 @@ def execute_sync():
         # Habits
         for task in habits:
             stat = stats_engine.match_stat_from_tags(task.get("tags"), tag_id_to_name)
-            if not stat: continue
+            if not stat:
+                continue
             task_id = task["id"]
             counter_up = task.get("counterUp", 0) or 0
             counter_down = task.get("counterDown", 0) or 0
@@ -107,7 +116,8 @@ def execute_sync():
         # Dailies
         for task in dailies:
             stat = stats_engine.match_stat_from_tags(task.get("tags"), tag_id_to_name)
-            if not stat: continue
+            if not stat:
+                continue
             task_id = task["id"]
             prev = data["tasks"].get(task_id, {})
             if task.get("completed") and prev.get("lastCreditedDate") != today_str:
@@ -120,7 +130,8 @@ def execute_sync():
         # Todos
         for task in todos:
             stat = stats_engine.match_stat_from_tags(task.get("tags"), tag_id_to_name)
-            if not stat: continue
+            if not stat:
+                continue
             task_id = task["id"]
             prev = data["tasks"].get(task_id, {})
             if task.get("completed") and not prev.get("credited", False):
@@ -139,14 +150,30 @@ def execute_sync():
 if config.HABITICA_USER_ID and config.HABITICA_API_TOKEN:
     execute_sync()
 
-effective_overall = max(1, stats_engine.overall_level(data["stats"]) + data.get("overall_level_offset", 0))
+# Safe level and rank evaluation
+raw_level = stats_engine.overall_level(data["stats"]) + data.get("overall_level_offset", 0)
+effective_overall = max(1, int(raw_level))
+
+try:
+    rank_title = milestones.get_rank_title(effective_overall)
+except AttributeError:
+    if effective_overall >= 26: rank_title = "S"
+    elif effective_overall >= 21: rank_title = "A"
+    elif effective_overall >= 16: rank_title = "B"
+    elif effective_overall >= 11: rank_title = "C"
+    elif effective_overall >= 6: rank_title = "D"
+    else: rank_title = "E"
 
 if view_mode == "🏠 STATUS HUD":
     col1, col2 = st.columns([3, 1])
     with col1:
         st.markdown('<div class="hud-header">[ PLAYER STATUS ]</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sub-header">▲ PLAYER LINK: ACTIVE | MIND MONARCH INTERFACE</div>', unsafe_allow_html=True)
     with col2:
-        st.markdown(f'<div style="text-align: right;"><span class="level-badge">LVL. {effective_overall:02d}</span><br><span class="rank-text">[{milestones.get_rank_title(effective_overall)} RANK]</span></div>', unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="text-align: right;"><span class="level-badge">LVL. {effective_overall:02d}</span><br><span class="rank-text">[{rank_title} RANK]</span></div>',
+            unsafe_allow_html=True
+        )
 
     hp, max_hp = data.get("hp", 50.0), data.get("max_hp", 50.0)
     st.markdown(f"**[ HP ] VITALITY:** `{hp:.1f} / {max_hp:.0f}`")
@@ -157,21 +184,34 @@ if view_mode == "🏠 STATUS HUD":
     for idx, stat_name in enumerate(stats_engine.STATS):
         entry = data["stats"][stat_name]
         color = STAT_COLORS.get(stat_name, "#00d2ff")
+        stat_lvl = int(entry["level"])
+        
+        try:
+            stat_rank = milestones.get_stat_rank(stat_name, stat_lvl)
+        except AttributeError:
+            stat_rank = f"{rank_title} RANK"
+
         with grid_cols[idx % 3]:
             st.markdown(f"""
             <div class="stat-card" style="border-top: 3px solid {color};">
                 <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
-                <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {entry['level']:02d}</div>
-                <div style="font-size: 10px; color: #64748b;">[{milestones.get_stat_rank(stat_name, entry['level'])}]</div>
+                <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
+                <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
             </div>
             """, unsafe_allow_html=True)
-            st.progress(min(1.0, max(0.0, entry["progress"])))
+            st.progress(min(1.0, max(0.0, float(entry["progress"]))))
 
 elif view_mode == "📜 ABILITY LEDGER":
     for stat in stats_engine.STATS:
-        curr_lvl = data["stats"][stat]["level"]
+        curr_lvl = int(data["stats"][stat]["level"])
         st.markdown(f"#### ◈ {STAT_DISPLAY_NAMES.get(stat, stat).upper()} (Lv.{curr_lvl})")
-        for lvl, title, desc in milestones.milestones_for(stat):
+        
+        try:
+            m_list = milestones.milestones_for(stat)
+        except AttributeError:
+            m_list = milestones.MILESTONES_DATA.get(stat, [])
+            
+        for lvl, title, desc in m_list:
             unlocked = curr_lvl >= lvl
             st.markdown(f"*{'✅' if unlocked else '🔒'}* **LV {lvl:02d} - {title.upper()}**: {desc}")
 
