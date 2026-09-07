@@ -40,8 +40,8 @@ st.markdown(f"""
         font-weight: bold;
         font-size: 11px;
         letter-spacing: 0.5px;
-        padding: 6px 8px;
-        margin-top: 2px;
+        padding: 8px 6px;
+        margin-bottom: 6px;
         transition: all 0.2s ease;
     }}
     div.stButton > button:hover {{
@@ -67,15 +67,16 @@ st.markdown(f"""
     .sub-header {{ font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 15px; }}
     .level-badge {{ font-size: 42px; font-weight: 800; color: {primary_color}; text-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }}
     .rank-text {{ font-size: 16px; font-weight: bold; color: #f59e0b; }}
-    .stat-card {{ background-color: #111827; border-radius: 8px; padding: 14px; text-align: center; border: 1px solid #1e293b; }}
-    .control-box {{ 
-        background-color: #111827; 
-        border-radius: 8px; 
-        padding: 12px; 
-        border: 1px solid #1e293b; 
-        text-align: center;
-        margin-bottom: 15px;
+    .stat-card {{ background-color: #111827; border-radius: 8px; padding: 14px; text-align: center; border: 1px solid #1e293b; margin-bottom: 15px; }}
+    
+    /* Vertical Control Panel Divider */
+    .right-panel-container {{
+        border-left: 2px solid #1e293b;
+        padding-left: 15px;
+        margin-left: 5px;
+        height: 100%;
     }}
+
     .metric-label {{ font-size: 11px; color: #64748b; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase; }}
     .metric-val {{ font-size: 20px; color: {primary_color}; font-weight: bold; }}
 </style>
@@ -205,6 +206,25 @@ try:
 except AttributeError:
     rank_title = "E RANK"
 
+def render_stat_card(stat_name):
+    entry = data["stats"][stat_name]
+    color = STAT_COLORS.get(stat_name, "#00d2ff")
+    stat_lvl = int(entry["level"])
+    
+    try:
+        stat_rank = milestones.get_stat_rank(stat_name, stat_lvl)
+    except AttributeError:
+        stat_rank = f"{rank_title}"
+
+    st.markdown(f"""
+    <div class="stat-card" style="border-top: 3px solid {color};">
+        <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
+        <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
+        <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.progress(min(1.0, max(0.0, float(entry["progress"]))))
+
 if view_mode == "🏠 HUD":
     col1, col2 = st.columns([3, 1])
     with col1:
@@ -221,48 +241,44 @@ if view_mode == "🏠 HUD":
     st.progress(max(0.0, min(1.0, hp / max_hp)) if max_hp > 0 else 0)
     st.markdown("---")
 
-    grid_cols = st.columns(3)
-    for idx, stat_name in enumerate(stats_engine.STATS):
-        entry = data["stats"][stat_name]
-        color = STAT_COLORS.get(stat_name, "#00d2ff")
-        stat_lvl = int(entry["level"])
-        
-        try:
-            stat_rank = milestones.get_stat_rank(stat_name, stat_lvl)
-        except AttributeError:
-            stat_rank = f"{rank_title}"
+    # Main Grid Layout with Right Separator Column for Buttons
+    main_grid, right_panel = st.columns([5.2, 0.8])
 
-        with grid_cols[idx % 3]:
-            st.markdown(f"""
-            <div class="stat-card" style="border-top: 3px solid {color}; margin-bottom: 15px;">
-                <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
-                <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
-                <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
-            </div>
-            """, unsafe_allow_html=True)
-            st.progress(min(1.0, max(0.0, float(entry["progress"]))))
+    with main_grid:
+        # Row 1: Discipline, Deep Focus, Career (Hacking)
+        r1_col1, r1_col2, r1_col3 = st.columns(3)
+        with r1_col1:
+            render_stat_card("Discipline")
+        with r1_col2:
+            render_stat_card("Deep Focus")
+        with r1_col3:
+            render_stat_card("Hacking")  # Displays as "Career"
 
-    # 6th Slot in Grid: Embedded Compact Control Panel under Physical
-    with grid_cols[2]:
-        st.markdown('<div class="control-box">', unsafe_allow_html=True)
-        st.markdown('<div style="font-size: 10px; color: #64748b; font-weight: bold; margin-bottom: 6px;">⚙️ SYSTEM NAVIGATION</div>', unsafe_allow_html=True)
+        # Row 2: Intelligence, Physical (Activity) in the middle under Deep Focus
+        r2_col1, r2_col2, r2_col3 = st.columns(3)
+        with r2_col1:
+            render_stat_card("Intelligence")
+        with r2_col2:
+            render_stat_card("Activity")  # Displays as "Physical" in middle column
+
+    with right_panel:
+        st.markdown('<div class="right-panel-container">', unsafe_allow_html=True)
+        st.markdown('<div style="font-size: 10px; color: #64748b; font-weight: bold; margin-bottom: 8px; text-align: center;">SYSTEM</div>', unsafe_allow_html=True)
         
-        btn_c1, btn_c2 = st.columns(2)
-        with btn_c1:
-            if st.button("📜 LEDGER", use_container_width=True):
-                st.session_state.view_mode = "📜 LEDGER"
-                st.rerun()
-        with btn_c2:
-            if st.button("📊 STATS", use_container_width=True):
-                st.session_state.view_mode = "📊 STATS"
-                st.rerun()
-                
+        if st.button("📜 LEDGER", use_container_width=True):
+            st.session_state.view_mode = "📜 LEDGER"
+            st.rerun()
+
+        if st.button("📊 STATS", use_container_width=True):
+            st.session_state.view_mode = "📊 STATS"
+            st.rerun()
+
         if st.button("🔄 SYNC", use_container_width=True):
             execute_sync(force=True)
+            
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    # Back button for LEDGER and STATS sub-pages
     if st.button("🔙 BACK TO HUD"):
         st.session_state.view_mode = "🏠 HUD"
         st.rerun()
