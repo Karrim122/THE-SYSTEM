@@ -1,35 +1,74 @@
-import os
-import json
 import streamlit as st
-import habitica_api
+from streamlit_autorefresh import st_autorefresh
+from datetime import date
+import data_store
+import stats_engine
+import milestones
+from habitica_api import HabiticaClient, HabiticaError
 
-try:
-    import stats_engine
-except ImportError:
-    stats_engine = None
-
-try:
-    import data_store
-except ImportError:
-    data_store = None
-
+# Page Config
 st.set_page_config(
-    page_title="Hunter Status Window",
+    page_title="SYSTEM: PLAYER STATUS",
     page_icon="⚡",
-    layout="centered",
-    initial_sidebar_state="collapsed",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-STATS = ["Discipline", "Deep Focus", "Activity", "Intelligence", "Hacking"]
+# Custom Theme CSS (Cyberpunk/Solo Leveling Aesthetic)
+st.markdown("""
+<style>
+    body { background-color: #030712; color: #f8fafc; font-family: 'Segoe UI', sans-serif; }
+    .stApp { background-color: #030712; }
+    
+    .status-card {
+        background-color: #0b0f19;
+        border: 1px solid #1e293b;
+        border-radius: 8px;
+        padding: 18px;
+        margin-bottom: 12px;
+    }
+    
+    .hud-header {
+        font-size: 24px;
+        font-weight: bold;
+        color: #00d2ff;
+        letter-spacing: 1px;
+    }
+    
+    .sub-header {
+        font-size: 11px;
+        color: #64748b;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    
+    .level-badge {
+        font-size: 42px;
+        font-weight: 800;
+        color: #00d2ff;
+        text-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+    }
+    
+    .rank-text {
+        font-size: 16px;
+        font-weight: bold;
+        color: #f59e0b;
+    }
 
-STAT_WEIGHTS = {
-    "Discipline": 5,
-    "Deep Focus": 4,
-    "Activity": 1,
-    "Intelligence": 3,
-    "Hacking": 5,
-}
+    .stat-card {
+        background-color: #111827;
+        border-radius: 8px;
+        padding: 14px;
+        text-align: center;
+        border: 1px solid #1e293b;
+    }
 
+    .metric-label { font-size: 10px; color: #64748b; font-weight: bold; }
+    .metric-val { font-size: 16px; color: #00d2ff; font-weight: bold; }
+</style>
+""", unsafe_allow_html=True)
+
+# Colors & Mappings matching main.py
 STAT_COLORS = {
     "Discipline": "#f43f5e",
     "Deep Focus": "#a855f7",
@@ -43,334 +82,230 @@ STAT_DISPLAY_NAMES = {
     "Hacking": "Career",
 }
 
-TAG_ALIAS = {
-    "physical": "Activity",
-    "activity": "Activity",
-    "career": "Hacking",
-    "hacking": "Hacking",
-    "discipline": "Discipline",
-    "deep focus": "Deep Focus",
-    "intelligence": "Intelligence",
-}
+# Auto-refresh app every 15 seconds for real-time mobile sync
+st_autorefresh(interval=15000, key="habitica_sync_heartbeat")
 
-st.markdown(
-    """
-    <style>
-    .block-container {
-        padding-top: 2.5rem !important;
-        padding-bottom: 1rem !important;
-        padding-left: 0.8rem !important;
-        padding-right: 0.8rem !important;
-    }
-    
-    .stApp {
-        background-color: #030712;
-        color: #f8fafc;
-        font-family: 'Segoe UI', Roboto, sans-serif;
-    }
-    
-    .status-card {
-        background: linear-gradient(135deg, #111827 0%, #0b0f19 100%);
-        border: 1.5px solid #00d2ff;
-        border-radius: 10px;
-        padding: 14px 12px;
-        text-align: center;
-        box-shadow: 0 0 12px rgba(0, 210, 255, 0.15);
-        margin-top: 4px;
-        margin-bottom: 14px;
-        overflow: hidden;
-    }
-    
-    .status-title {
-        font-size: 0.75rem;
-        letter-spacing: 1.5px;
-        color: #64748b;
-        text-transform: uppercase;
-        font-weight: 700;
-    }
-    
-    .status-level {
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: #00d2ff;
-        text-shadow: 0 0 8px rgba(0, 210, 255, 0.4);
-        margin: 2px 0;
-        line-height: 1;
-    }
+# Load session/stored data
+if "data" not in st.session_state:
+    st.session_state.data = data_store.load_data()
 
-    .status-rank {
-        color: #38bdf8;
-        font-size: 0.8rem;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        margin-top: 4px;
-        text-transform: uppercase;
-    }
+data = st.session_state.data
 
-    .section-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #94a3b8;
-        margin-bottom: 8px;
-        letter-spacing: 1px;
-    }
-    
-    .stat-card-square {
-        background-color: #111827;
-        border-radius: 8px;
-        height: 85px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        padding: 6px;
-        margin-bottom: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    
-    .stat-card-name {
-        font-weight: 700;
-        font-size: 0.75rem;
-        letter-spacing: 0.5px;
-        margin-bottom: 4px;
-        text-transform: uppercase;
-    }
-    
-    .stat-card-level {
-        font-size: 1.3rem;
-        font-weight: 800;
-        line-height: 1;
-    }
-    </style>
-""",
-    unsafe_allow_html=True,
-)
+# Sidebar Settings for Habitica Credentials
+st.sidebar.title("⚡ SYSTEM CONTROL")
+user_id = st.sidebar.text_input("PLAYER USER ID", value=st.secrets.get("HABITICA_USER_ID", ""), type="password")
+api_token = st.sidebar.text_input("SYSTEM SECRET KEY", value=st.secrets.get("HABITICA_API_TOKEN", ""), type="password")
 
+st.sidebar.markdown("---")
+view_mode = st.sidebar.radio("NAVIGATION", ["🏠 STATUS HUD", "📜 ABILITY LEDGER", "📜 SYSTEM LOGS"])
 
-def get_credentials():
-    user_id = None
-    api_token = None
+# Sync Engine Function
+def execute_sync():
+    if not user_id or not api_token:
+        st.sidebar.error("Enter Habitica credentials to sync.")
+        return
 
     try:
-        user_id = st.secrets.get("HABITICA_USER_ID") or st.secrets.get("habitica_user_id")
-        api_token = st.secrets.get("HABITICA_API_TOKEN") or st.secrets.get("habitica_api_token")
-    except Exception:
-        pass
+        client = HabiticaClient(user_id, api_token)
+        prev_overall = max(1, stats_engine.overall_level(data["stats"]) + data.get("overall_level_offset", 0))
 
-    if not user_id or not api_token:
-        try:
-            import config
-            cfg = config.load_config()
-            user_id = user_id or cfg.get("habitica_user_id")
-            api_token = api_token or cfg.get("habitica_api_token")
-        except Exception:
-            pass
+        user_data = client.get_user()
+        stats_data = user_data.get("stats", {})
+        data["hp"] = float(stats_data.get("hp", 50))
+        data["max_hp"] = float(stats_data.get("maxHP", 50))
 
-    if not user_id or not api_token:
-        try:
-            cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
-            if os.path.exists(cfg_path):
-                with open(cfg_path, "r", encoding="utf-8") as f:
-                    cfg = json.load(f)
-                    user_id = user_id or cfg.get("habitica_user_id")
-                    api_token = api_token or cfg.get("habitica_api_token")
-        except Exception:
-            pass
+        if data["hp"] <= 0:
+            if "Discipline" in data["stats"] and data["stats"]["Discipline"]["level"] > 1:
+                data["stats"]["Discipline"]["level"] -= 1
+            if "Deep Focus" in data["stats"] and data["stats"]["Deep Focus"]["level"] > 1:
+                data["stats"]["Deep Focus"]["level"] -= 1
+            data["overall_level_offset"] = data.get("overall_level_offset", 0) - 1
+            data_store.add_log(data, "⚠️ PENALTY ZONE ENFORCED! HP Depleted: Stats Regressed.")
 
-    return user_id, api_token
+        tags = client.get_tags()
+        tag_id_to_name = {t["id"]: t["name"] for t in tags}
 
+        habits = client.get_tasks("habits")
+        dailies = client.get_tasks("dailys")
+        active_todos = client.get_tasks("todos")
+        completed_todos = client.get_tasks("completedTodos")
+        todos = active_todos + completed_todos
 
-@st.cache_data(ttl=15)
-def cached_fetch_habitica_data(user_id, api_token):
-    """Caches Habitica API responses for 15s to prevent 429 Rate Limit errors."""
-    return habitica_api.fetch_user_data(user_id, api_token)
+        today_str = date.today().isoformat()
 
+        # 1. HABITS
+        for task in habits:
+            stat = stats_engine.match_stat_from_tags(task.get("tags"), tag_id_to_name)
+            if not stat:
+                continue
+            task_id = task["id"]
+            counter_up = task.get("counterUp", 0) or 0
+            counter_down = task.get("counterDown", 0) or 0
+            prev = data["tasks"].get(task_id, {"counterUp": 0, "counterDown": 0})
 
-def get_rank(level: int) -> str:
-    if level < 5:
-        return "E RANK"
-    elif level <= 9:
-        return "D RANK"
-    elif level <= 19:
-        return "C RANK"
-    elif level <= 34:
-        return "B RANK"
-    elif level <= 49:
-        return "A RANK"
-    elif level <= 64:
-        return "S RANK"
-    elif level <= 79:
-        return "SS RANK"
-    elif level <= 99:
-        return "SSS RANK"
-    else:
-        return "ANOTHER LEVEL"
+            new_up = counter_up - prev.get("counterUp", 0) if counter_up >= prev.get("counterUp", 0) else counter_up
+            if new_up > 0:
+                diff = stats_engine.priority_to_difficulty(task.get("priority", 1))
+                inc = stats_engine.DIFFICULTY_INCREMENT[diff] * new_up
+                levels = stats_engine.apply_progress(data["stats"], stat, inc, direction="up")
+                disp = STAT_DISPLAY_NAMES.get(stat, stat)
+                data_store.add_log(data, f"Action '{task.get('text','?')}' x{new_up} -> +{disp} EXP")
 
+            new_down = counter_down - prev.get("counterDown", 0) if counter_down >= prev.get("counterDown", 0) else counter_down
+            if new_down > 0:
+                diff = stats_engine.priority_to_difficulty(task.get("priority", 1))
+                inc = stats_engine.DIFFICULTY_INCREMENT[diff] * new_down
+                levels = stats_engine.apply_progress(data["stats"], stat, inc, direction="down")
+                disp = STAT_DISPLAY_NAMES.get(stat, stat)
+                data_store.add_log(data, f"Penalty '{task.get('text','?')}' x{new_down} -> -{disp} EXP")
 
-def load_local_saved_stats():
-    """Reads stats structure saved locally in data.json."""
-    local_data = {}
-    if data_store and hasattr(data_store, "load_data"):
-        try:
-            local_data = data_store.load_data()
-        except Exception:
-            pass
-    
-    if not local_data:
-        data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
-        if os.path.exists(data_path):
-            try:
-                with open(data_path, "r", encoding="utf-8") as f:
-                    local_data = json.load(f)
-            except Exception:
-                pass
+            data["tasks"][task_id] = {"counterUp": counter_up, "counterDown": counter_down}
 
-    return local_data.get("stats", {}) if isinstance(local_data, dict) else {}
+        # 2. DAILIES
+        for task in dailies:
+            stat = stats_engine.match_stat_from_tags(task.get("tags"), tag_id_to_name)
+            if not stat:
+                continue
+            task_id = task["id"]
+            completed = bool(task.get("completed"))
+            prev = data["tasks"].get(task_id, {})
+            if completed and prev.get("lastCreditedDate") != today_str:
+                diff = stats_engine.priority_to_difficulty(task.get("priority", 1))
+                inc = stats_engine.DIFFICULTY_INCREMENT[diff]
+                stats_engine.apply_progress(data["stats"], stat, inc, direction="up")
+                disp = STAT_DISPLAY_NAMES.get(stat, stat)
+                data_store.add_log(data, f"Daily '{task.get('text','?')}' cleared -> +{disp} EXP")
+                prev["lastCreditedDate"] = today_str
+            data["tasks"][task_id] = prev
 
+        # 3. TODOS
+        for task in todos:
+            stat = stats_engine.match_stat_from_tags(task.get("tags"), tag_id_to_name)
+            if not stat:
+                continue
+            task_id = task["id"]
+            completed = bool(task.get("completed"))
+            prev = data["tasks"].get(task_id, {})
+            if completed and not prev.get("credited", False):
+                diff = stats_engine.priority_to_difficulty(task.get("priority", 1))
+                inc = stats_engine.DIFFICULTY_INCREMENT[diff]
+                stats_engine.apply_progress(data["stats"], stat, inc, direction="up")
+                disp = STAT_DISPLAY_NAMES.get(stat, stat)
+                data_store.add_log(data, f"Quest '{task.get('text','?')}' cleared -> +{disp} EXP")
+                prev["credited"] = True
+            data["tasks"][task_id] = prev
 
-def calculate_stats_from_habitica(raw_data):
-    tags_data = raw_data.get("tags", [])
-    tag_map = {}
-    for tag in tags_data:
-        tname = tag.get("name", "").strip().lower()
-        if tname in TAG_ALIAS:
-            tag_map[tag["id"]] = TAG_ALIAS[tname]
+        data["last_synced"] = today_str
+        data_store.save_data(data)
+        st.sidebar.success("SYNCHRONIZED WITH HABITICA")
+    except HabiticaError as e:
+        st.sidebar.error(f"Sync failed: {e}")
 
-    stat_progress = {s: 0.0 for s in STATS}
-    all_tasks = (
-        raw_data.get("habits", []) +
-        raw_data.get("dailies", []) +
-        raw_data.get("todos", [])
-    )
+# Run Sync on Load / Heartbeat
+if user_id and api_token:
+    execute_sync()
 
-    for task in all_tasks:
-        task_tags = task.get("tags", [])
-        matching_stats = {tag_map[tid] for tid in task_tags if tid in tag_map}
+# Header & Stats Calculation
+base_overall = stats_engine.overall_level(data["stats"])
+effective_overall = max(1, base_overall + data.get("overall_level_offset", 0))
+overall_rank = milestones.get_rank_title(effective_overall)
 
-        if not matching_stats:
-            continue
+# UI Layout
+if view_mode == "🏠 STATUS HUD":
+    col_head1, col_head2 = st.columns([3, 1])
+    with col_head1:
+        st.markdown('<div class="hud-header">[ PLAYER STATUS ]</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sub-header">▲ PLAYER LINK: ACTIVE | MIND MONARCH INTERFACE</div>', unsafe_allow_html=True)
+    with col_head2:
+        st.markdown(f'<div style="text-align: right;"><span class="level-badge">LVL. {effective_overall:02d}</span><br><span class="rank-text">[{overall_rank} RANK]</span></div>', unsafe_allow_html=True)
 
-        priority = task.get("priority", 1)
-        if priority == 2:
-            increment = 0.20
-        elif priority == 1.5:
-            increment = 0.10
-        else:
-            increment = 0.05
+    # Health Bar
+    hp = data.get("hp", 50.0)
+    max_hp = data.get("max_hp", 50.0)
+    hp_pct = max(0.0, min(1.0, hp / max_hp)) if max_hp > 0 else 0
+    st.markdown(f"**[ HP ] VITALITY STATUS:** `{hp:.1f} / {max_hp:.0f}`")
+    st.progress(hp_pct)
 
-        completions = 0
-        ttype = task.get("type", "")
-        if ttype == "habit":
-            completions = task.get("counterUp", 0) - task.get("counterDown", 0)
-        elif ttype == "daily":
-            if task.get("completed", False):
-                completions = 1
-            history = task.get("history", [])
-            if history:
-                completed_history = [h for h in history if h.get("completed", False) or h.get("value", 0) > 0]
-                completions = max(completions, len(completed_history))
-        elif ttype == "todo":
-            if task.get("completed", False):
-                completions = 1
+    st.markdown("---")
 
-        if completions > 0:
-            total_exp = completions * increment
-            for stat_name in matching_stats:
-                stat_progress[stat_name] += total_exp
+    col_left, col_right = st.columns([3, 2])
 
-    local_stats = load_local_saved_stats()
-    stats_block = {}
+    with col_left:
+        st.markdown("### [ CORE ATTRIBUTES ]")
+        grid_cols = st.columns(2)
+        idx = 0
+        for stat_name in stats_engine.STATS:
+            entry = data["stats"][stat_name]
+            disp_name = STAT_DISPLAY_NAMES.get(stat_name, stat_name)
+            color = STAT_COLORS.get(stat_name, "#00d2ff")
+            rank = milestones.get_stat_rank(stat_name, entry["level"])
 
-    for s in STATS:
-        local_info = local_stats.get(s, {})
-        base_level = local_info.get("level", 1)
-        base_prog = local_info.get("progress", 0.0)
-        
-        total_val = (base_level - 1) + base_prog + stat_progress[s]
-        lvl = 1 + int(total_val)
-        prog = total_val - int(total_val)
-        
-        stats_block[s] = {"level": max(1, lvl), "progress": round(prog, 2)}
+            with grid_cols[idx % 2]:
+                st.markdown(f"""
+                <div class="stat-card" style="border-top: 3px solid {color};">
+                    <div style="color: {color}; font-weight: bold; font-size: 14px;">◈ {disp_name.upper()}</div>
+                    <div style="font-size: 28px; font-weight: bold; color: {color};">LVL {entry['level']:02d}</div>
+                    <div style="font-size: 11px; color: #64748b;">[{rank}]</div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.progress(min(1.0, max(0.0, entry["progress"])))
+            idx += 1
 
-    return stats_block
+    with col_right:
+        st.markdown("### [ SYSTEM ANALYTICS ]")
 
+        levels = {s: data["stats"][s]["level"] for s in stats_engine.STATS}
+        highest = max(levels, key=levels.get)
+        lowest = min(levels, key=levels.get)
+        total_pts = sum(levels.values())
+        ratio = (levels[lowest] / levels[highest] * 100) if levels[highest] > 0 else 100
 
-def calculate_overall_level(stats_block):
-    if stats_engine and hasattr(stats_engine, "overall_level"):
-        try:
-            return stats_engine.overall_level(stats_block)
-        except Exception:
-            pass
+        st.markdown(f"""
+        <div class="status-card">
+            <div class="metric-label">TOTAL ATTRIBUTE POINTS</div>
+            <div class="metric-val">{total_pts} PTS</div>
+            <br>
+            <div class="metric-label">HIGHEST ATTRIBUTE</div>
+            <div class="metric-val" style="color: {STAT_COLORS.get(highest)};">{STAT_DISPLAY_NAMES.get(highest, highest).upper()} (LVL {levels[highest]})</div>
+            <br>
+            <div class="metric-label">LOWEST ATTRIBUTE</div>
+            <div class="metric-val" style="color: {STAT_COLORS.get(lowest)};">{STAT_DISPLAY_NAMES.get(lowest, lowest).upper()} (LVL {levels[lowest]})</div>
+            <br>
+            <div class="metric-label">ATTRIBUTE BALANCE RATIO</div>
+            <div class="metric-val">{ratio:.1f}% CONVERGENCE</div>
+            <br>
+            <div class="metric-label">LAST SYSTEM SYNC</div>
+            <div class="metric-val" style="font-size: 12px; color: #64748b;">{data.get('last_synced', 'NOT SYNCED')}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    total_weight = sum(STAT_WEIGHTS.values())
-    weighted_sum = sum(stats_block[s]["level"] * STAT_WEIGHTS.get(s, 1) for s in STATS if s in stats_block)
-    return max(1, round(weighted_sum / total_weight))
+elif view_mode == "📜 ABILITY LEDGER":
+    st.markdown("### [ ABILITY LEDGER ]")
+    st.caption("MILESTONE REWARDS EARNED THROUGH LEVELING")
 
+    for stat in stats_engine.STATS:
+        curr_lvl = data["stats"][stat]["level"]
+        color = STAT_COLORS.get(stat, "#00d2ff")
+        disp_name = STAT_DISPLAY_NAMES.get(stat, stat)
 
-def display_dashboard():
-    user_id, api_token = get_credentials()
-    stats_block = None
+        st.markdown(f"#### <span style='color:{color};'>◈ {disp_name.upper()}</span> (Current: Lv.{curr_lvl})", unsafe_allow_html=True)
 
-    if user_id and api_token:
-        try:
-            raw_data = cached_fetch_habitica_data(user_id, api_token)
-            if stats_engine and hasattr(stats_engine, "calculate_stats"):
-                try:
-                    stats_block = stats_engine.calculate_stats(raw_data)
-                except Exception:
-                    pass
-            if not stats_block:
-                stats_block = calculate_stats_from_habitica(raw_data)
-        except Exception as e:
-            st.error(f"Sync error: {e}")
+        for lvl, title, desc in milestones.milestones_for(stat):
+            unlocked = curr_lvl >= lvl
+            status_icon = "✅" if unlocked else "🔒"
+            text_color = "#f8fafc" if unlocked else "#64748b"
 
-    if not stats_block:
-        local_stats = load_local_saved_stats()
-        if local_stats:
-            stats_block = local_stats
-        elif stats_engine and hasattr(stats_engine, "new_stat_block"):
-            stats_block = stats_engine.new_stat_block()
-        else:
-            stats_block = {s: {"level": 1, "progress": 0.0} for s in STATS}
+            st.markdown(f"""
+            <div style="background-color: #0b0f19; border-left: 4px solid {color if unlocked else '#1e293b'}; padding: 10px; margin-bottom: 6px; border-radius: 4px;">
+                <span style="color: {text_color}; font-weight: bold;">{status_icon} LV {lvl:02d} - {title.upper()}</span><br>
+                <span style="color: {text_color}; font-size: 13px;">I will be able to {desc}</span>
+            </div>
+            """, unsafe_allow_html=True)
 
-    current_overall_level = calculate_overall_level(stats_block)
-    player_rank = get_rank(current_overall_level)
-
-    st.markdown(
-        f"""<div class="status-card">
-                <div class="status-title">SYSTEM STATUS</div>
-                <div class="status-level">LVL {current_overall_level:02d}</div>
-                <div class="status-rank">[{player_rank}]</div>
-            </div>""",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown('<div class="section-title">ATTRIBUTES</div>', unsafe_allow_html=True)
-
-    cols = st.columns(2)
-    for idx, stat_name in enumerate(STATS):
-        stat_info = stats_block.get(stat_name, {"level": 1, "progress": 0.0})
-        level = stat_info["level"]
-
-        color = STAT_COLORS.get(stat_name, "#00d2ff")
-        display_name = STAT_DISPLAY_NAMES.get(stat_name, stat_name)
-
-        single_line_card = (
-            f'<div class="stat-card-square" style="border: 1px solid {color};">'
-            f'<div class="stat-card-name" style="color: {color};">◈ {display_name}</div>'
-            f'<div class="stat-card-level" style="color: {color};">LVL {level:02d}</div>'
-            f"</div>"
-        )
-
-        with cols[idx % 2]:
-            st.markdown(single_line_card, unsafe_allow_html=True)
-
-
-if hasattr(st, "fragment"):
-    @st.fragment(run_every=10)
-    def live_dashboard():
-        display_dashboard()
-    live_dashboard()
-else:
-    display_dashboard()
+elif view_mode == "📜 SYSTEM LOGS":
+    st.markdown("### [ SYSTEM ACTION LOGS ]")
+    logs = data.get("log", [])
+    if not logs:
+        st.info("No system activity recorded yet.")
+    for l in logs[:30]:
+        st.code(l, language="text")
