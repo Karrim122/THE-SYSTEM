@@ -8,6 +8,11 @@ try:
 except ImportError:
     stats_engine = None
 
+try:
+    import data_store
+except ImportError:
+    data_store = None
+
 st.set_page_config(
     page_title="Hunter Status Window",
     page_icon="⚡",
@@ -197,6 +202,27 @@ def get_rank(level: int) -> str:
         return "ANOTHER LEVEL"
 
 
+def load_local_saved_stats():
+    """Reads stats structure saved locally in data.json."""
+    local_data = {}
+    if data_store and hasattr(data_store, "load_data"):
+        try:
+            local_data = data_store.load_data()
+        except Exception:
+            pass
+    
+    if not local_data:
+        data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
+        if os.path.exists(data_path):
+            try:
+                with open(data_path, "r", encoding="utf-8") as f:
+                    local_data = json.load(f)
+            except Exception:
+                pass
+
+    return local_data.get("stats", {}) if isinstance(local_data, dict) else {}
+
+
 def calculate_stats_from_habitica(raw_data):
     tags_data = raw_data.get("tags", [])
     tag_map = {}
@@ -247,11 +273,18 @@ def calculate_stats_from_habitica(raw_data):
             for stat_name in matching_stats:
                 stat_progress[stat_name] += total_exp
 
+    local_stats = load_local_saved_stats()
     stats_block = {}
+
     for s in STATS:
-        total_val = stat_progress[s]
+        local_info = local_stats.get(s, {})
+        base_level = local_info.get("level", 1)
+        base_prog = local_info.get("progress", 0.0)
+        
+        total_val = (base_level - 1) + base_prog + stat_progress[s]
         lvl = 1 + int(total_val)
         prog = total_val - int(total_val)
+        
         stats_block[s] = {"level": max(1, lvl), "progress": round(prog, 2)}
 
     return stats_block
@@ -287,7 +320,10 @@ def display_dashboard():
             st.error(f"Sync error: {e}")
 
     if not stats_block:
-        if stats_engine and hasattr(stats_engine, "new_stat_block"):
+        local_stats = load_local_saved_stats()
+        if local_stats:
+            stats_block = local_stats
+        elif stats_engine and hasattr(stats_engine, "new_stat_block"):
             stats_block = stats_engine.new_stat_block()
         else:
             stats_block = {s: {"level": 1, "progress": 0.0} for s in STATS}
