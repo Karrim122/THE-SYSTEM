@@ -27,10 +27,10 @@ st.markdown(f"""
     body {{ background-color: {bg_color}; color: {text_color}; font-family: '{font_family}'; }}
     .stApp {{ background-color: {bg_color}; }}
     
-    /* Hide Streamlit default sidebar collapse button */
-    [data-testid="stSidebarNav"] {{ display: none; }}
+    /* Hide Streamlit default sidebar completely */
+    [data-testid="stSidebarNav"], [data-testid="collapsedControl"] {{ display: none !important; }}
     
-    /* Top Nav Button Styling */
+    /* Compact Vertical Nav Buttons */
     div.stButton > button {{
         width: 100%;
         background-color: {sec_bg};
@@ -38,20 +38,21 @@ st.markdown(f"""
         border: 1px solid #1e293b;
         border-radius: 6px;
         font-weight: bold;
+        font-size: 12px;
         letter-spacing: 0.5px;
-        padding: 10px 14px;
-        transition: all 0.3s ease;
+        padding: 8px 10px;
+        margin-bottom: 4px;
+        transition: all 0.2s ease;
     }}
     div.stButton > button:hover {{
         border-color: {primary_color};
-        box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+        box-shadow: 0 0 8px rgba(0, 210, 255, 0.3);
         color: #ffffff;
         background-color: #111827;
     }}
     div.stButton > button:active, div.stButton > button:focus {{
         background-color: #111827;
         border-color: {primary_color};
-        box-shadow: 0 0 12px rgba(0, 210, 255, 0.5);
     }}
 
     .status-card {{
@@ -94,7 +95,7 @@ if "last_sync_timestamp" not in st.session_state:
     st.session_state.last_sync_timestamp = 0
 
 if "view_mode" not in st.session_state:
-    st.session_state.view_mode = "🏠 STATUS HUD"
+    st.session_state.view_mode = "🏠 HUD"
 
 data = st.session_state.data
 
@@ -186,130 +187,129 @@ def execute_sync(force=False):
 if config.HABITICA_USER_ID and config.HABITICA_API_TOKEN:
     execute_sync(force=False)
 
-# TOP NAVIGATION BAR
-nav_col1, nav_col2, nav_col3, nav_col4 = st.columns([1, 1, 1, 0.8])
+# MAIN LAYOUT: Narrow Left Nav + Main Content Area
+left_nav, main_content = st.columns([0.8, 5.2])
 
-with nav_col1:
-    if st.button("🏠 STATUS HUD", use_container_width=True):
-        st.session_state.view_mode = "🏠 STATUS HUD"
+with left_nav:
+    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+    if st.button("🏠 HUD", use_container_width=True):
+        st.session_state.view_mode = "🏠 HUD"
         st.rerun()
 
-with nav_col2:
-    if st.button("📜 ABILITY LEDGER", use_container_width=True):
-        st.session_state.view_mode = "📜 ABILITY LEDGER"
+    if st.button("📜 LEDGER", use_container_width=True):
+        st.session_state.view_mode = "📜 LEDGER"
         st.rerun()
 
-with nav_col3:
-    if st.button("📊 SYSTEM ANALYTICS", use_container_width=True):
-        st.session_state.view_mode = "📊 SYSTEM ANALYTICS"
+    if st.button("📊 STATS", use_container_width=True):
+        st.session_state.view_mode = "📊 STATS"
         st.rerun()
 
-with nav_col4:
-    if st.button("🔄 MANUAL SYNC", use_container_width=True):
+    st.markdown("<hr style='margin: 8px 0; border-color: #1e293b;'>", unsafe_allow_html=True)
+
+    if st.button("🔄 SYNC", use_container_width=True):
         execute_sync(force=True)
 
-st.markdown("<hr style='margin-top: 10px; margin-bottom: 25px; border-color: #1e293b;'>", unsafe_allow_html=True)
+with main_content:
+    view_mode = st.session_state.view_mode
 
-view_mode = st.session_state.view_mode
+    # Safe level and rank evaluation
+    raw_level = stats_engine.overall_level(data["stats"]) + data.get("overall_level_offset", 0)
+    effective_overall = max(1, int(raw_level))
 
-# Safe level and rank evaluation
-raw_level = stats_engine.overall_level(data["stats"]) + data.get("overall_level_offset", 0)
-effective_overall = max(1, int(raw_level))
+    try:
+        rank_title = milestones.get_rank_title(effective_overall)
+    except AttributeError:
+        rank_title = "E RANK"
 
-try:
-    rank_title = milestones.get_rank_title(effective_overall)
-except AttributeError:
-    rank_title = "E RANK"
+    if view_mode == "🏠 HUD":
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown('<div class="hud-header">[ PLAYER STATUS ]</div>', unsafe_allow_html=True)
+            st.markdown('<div class="sub-header">▲ PLAYER LINK: ACTIVE | MIND MONARCH INTERFACE</div>', unsafe_allow_html=True)
+        with col2:
+            st.markdown(
+                f'<div style="text-align: right;"><span class="level-badge">LVL. {effective_overall:02d}</span><br><span class="rank-text">[{rank_title}]</span></div>',
+                unsafe_allow_html=True
+            )
 
-if view_mode == "🏠 STATUS HUD":
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.markdown('<div class="hud-header">[ PLAYER STATUS ]</div>', unsafe_allow_html=True)
-        st.markdown('<div class="sub-header">▲ PLAYER LINK: ACTIVE | MIND MONARCH INTERFACE</div>', unsafe_allow_html=True)
-    with col2:
-        st.markdown(
-            f'<div style="text-align: right;"><span class="level-badge">LVL. {effective_overall:02d}</span><br><span class="rank-text">[{rank_title}]</span></div>',
-            unsafe_allow_html=True
-        )
+        hp, max_hp = data.get("hp", 50.0), data.get("max_hp", 50.0)
+        st.markdown(f"**[ HP ] VITALITY:** `{hp:.1f} / {max_hp:.0f}`")
+        st.progress(max(0.0, min(1.0, hp / max_hp)) if max_hp > 0 else 0)
+        st.markdown("---")
 
-    hp, max_hp = data.get("hp", 50.0), data.get("max_hp", 50.0)
-    st.markdown(f"**[ HP ] VITALITY:** `{hp:.1f} / {max_hp:.0f}`")
-    st.progress(max(0.0, min(1.0, hp / max_hp)) if max_hp > 0 else 0)
-    st.markdown("---")
-
-    grid_cols = st.columns(3)
-    for idx, stat_name in enumerate(stats_engine.STATS):
-        entry = data["stats"][stat_name]
-        color = STAT_COLORS.get(stat_name, "#00d2ff")
-        stat_lvl = int(entry["level"])
-        
-        try:
-            stat_rank = milestones.get_stat_rank(stat_name, stat_lvl)
-        except AttributeError:
-            stat_rank = f"{rank_title}"
-
-        with grid_cols[idx % 3]:
-            st.markdown(f"""
-            <div class="stat-card" style="border-top: 3px solid {color}; margin-bottom: 15px;">
-                <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
-                <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
-                <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
-            </div>
-            """, unsafe_allow_html=True)
-            st.progress(min(1.0, max(0.0, float(entry["progress"]))))
-
-elif view_mode == "📜 ABILITY LEDGER":
-    for stat in stats_engine.STATS:
-        curr_lvl = int(data["stats"][stat]["level"])
-        st.markdown(f"#### ◈ {STAT_DISPLAY_NAMES.get(stat, stat).upper()} (Lv.{curr_lvl})")
-        
-        try:
-            m_list = milestones.milestones_for(stat)
-        except AttributeError:
-            m_list = getattr(milestones, "MILESTONES", {}).get(stat, [])
+        grid_cols = st.columns(3)
+        for idx, stat_name in enumerate(stats_engine.STATS):
+            entry = data["stats"][stat_name]
+            color = STAT_COLORS.get(stat_name, "#00d2ff")
+            stat_lvl = int(entry["level"])
             
-        for lvl, title, desc in m_list:
-            unlocked = curr_lvl >= lvl
-            st.markdown(f"*{'✅' if unlocked else '🔒'}* **LV {lvl:02d} - {title.upper()}**: {desc}")
+            try:
+                stat_rank = milestones.get_stat_rank(stat_name, stat_lvl)
+            except AttributeError:
+                stat_rank = f"{rank_title}"
 
-elif view_mode == "📊 SYSTEM ANALYTICS":
-    st.markdown('<div class="hud-header">[ SYSTEM ANALYTICS ]</div>', unsafe_allow_html=True)
-    st.markdown('<br>', unsafe_allow_html=True)
+            with grid_cols[idx % 3]:
+                st.markdown(f"""
+                <div class="stat-card" style="border-top: 3px solid {color}; margin-bottom: 15px;">
+                    <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
+                    <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
+                    <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.progress(min(1.0, max(0.0, float(entry["progress"]))))
 
-    total_pts = sum(int(data["stats"][s]["level"]) for s in stats_engine.STATS)
-    
-    highest_stat = max(stats_engine.STATS, key=lambda s: data["stats"][s]["level"])
-    highest_lvl = int(data["stats"][highest_stat]["level"])
-    highest_display = STAT_DISPLAY_NAMES.get(highest_stat, highest_stat).upper()
-    highest_color = STAT_COLORS.get(highest_stat, primary_color)
-    
-    lowest_stat = min(stats_engine.STATS, key=lambda s: data["stats"][s]["level"])
-    lowest_lvl = int(data["stats"][lowest_stat]["level"])
-    lowest_display = STAT_DISPLAY_NAMES.get(lowest_stat, lowest_stat).upper()
-    lowest_color = STAT_COLORS.get(lowest_stat, primary_color)
+    elif view_mode == "📜 LEDGER":
+        for stat in stats_engine.STATS:
+            curr_lvl = int(data["stats"][stat]["level"])
+            st.markdown(f"#### ◈ {STAT_DISPLAY_NAMES.get(stat, stat).upper()} (Lv.{curr_lvl})")
+            
+            try:
+                m_list = milestones.milestones_for(stat)
+            except AttributeError:
+                m_list = getattr(milestones, "MILESTONES", {}).get(stat, [])
+                
+            for lvl, title, desc in m_list:
+                unlocked = curr_lvl >= lvl
+                st.markdown(f"*{'✅' if unlocked else '🔒'}* **LV {lvl:02d} - {title.upper()}**: {desc}")
 
-    balance_ratio = (lowest_lvl / highest_lvl * 100.0) if highest_lvl > 0 else 100.0
-    sync_date = data.get("last_synced", date.today().isoformat())
+    elif view_mode == "📊 STATS":
+        st.markdown('<div class="hud-header">[ SYSTEM ANALYTICS ]</div>', unsafe_allow_html=True)
+        st.markdown('<br>', unsafe_allow_html=True)
 
-    st.markdown(f"""
-    <div class="status-card">
-        <div class="metric-label">TOTAL ATTRIBUTE POINTS</div>
-        <div class="metric-val">{total_pts} PTS</div>
-    </div>
-    <div class="status-card">
-        <div class="metric-label">HIGHEST ATTRIBUTE</div>
-        <div class="metric-val" style="color: {highest_color};">{highest_display} (LVL {highest_lvl})</div>
-    </div>
-    <div class="status-card">
-        <div class="metric-label">LOWEST ATTRIBUTE</div>
-        <div class="metric-val" style="color: {lowest_color};">{lowest_display} (LVL {lowest_lvl})</div>
-    </div>
-    <div class="status-card">
-        <div class="metric-label">ATTRIBUTE BALANCE RATIO</div>
-        <div class="metric-val">{balance_ratio:.1f}% CONVERGENCE</div>
-    </div>
-    <div class="status-card">
-        <div class="metric-label">SYSTEM SYNC DATE</div>
-        <div class="metric-val">{sync_date}</div>
-    </div>
-    """, unsafe_allow_html=True)
+        total_pts = sum(int(data["stats"][s]["level"]) for s in stats_engine.STATS)
+        
+        highest_stat = max(stats_engine.STATS, key=lambda s: data["stats"][s]["level"])
+        highest_lvl = int(data["stats"][highest_stat]["level"])
+        highest_display = STAT_DISPLAY_NAMES.get(highest_stat, highest_stat).upper()
+        highest_color = STAT_COLORS.get(highest_stat, primary_color)
+        
+        lowest_stat = min(stats_engine.STATS, key=lambda s: data["stats"][s]["level"])
+        lowest_lvl = int(data["stats"][lowest_stat]["level"])
+        lowest_display = STAT_DISPLAY_NAMES.get(lowest_stat, lowest_stat).upper()
+        lowest_color = STAT_COLORS.get(lowest_stat, primary_color)
+
+        balance_ratio = (lowest_lvl / highest_lvl * 100.0) if highest_lvl > 0 else 100.0
+        sync_date = data.get("last_synced", date.today().isoformat())
+
+        st.markdown(f"""
+        <div class="status-card">
+            <div class="metric-label">TOTAL ATTRIBUTE POINTS</div>
+            <div class="metric-val">{total_pts} PTS</div>
+        </div>
+        <div class="status-card">
+            <div class="metric-label">HIGHEST ATTRIBUTE</div>
+            <div class="metric-val" style="color: {highest_color};">{highest_display} (LVL {highest_lvl})</div>
+        </div>
+        <div class="status-card">
+            <div class="metric-label">LOWEST ATTRIBUTE</div>
+            <div class="metric-val" style="color: {lowest_color};">{lowest_display} (LVL {lowest_lvl})</div>
+        </div>
+        <div class="status-card">
+            <div class="metric-label">ATTRIBUTE BALANCE RATIO</div>
+            <div class="metric-val">{balance_ratio:.1f}% CONVERGENCE</div>
+        </div>
+        <div class="status-card">
+            <div class="metric-label">SYSTEM SYNC DATE</div>
+            <div class="metric-val">{sync_date}</div>
+        </div>
+        """, unsafe_allow_html=True)
