@@ -81,7 +81,7 @@ def get_rank_title(level):
         return "B RANK"
     elif level >= 10:
         return "C RANK"
-    elif level >= 5;
+    elif level >= 5:
         return "D RANK"
     return "E RANK"
 
