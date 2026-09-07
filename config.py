@@ -1,27 +1,18 @@
 import json
 import os
 
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
-
-DEFAULT_CONFIG = {
-    "habitica_user_id": "",
-    "habitica_api_token": "",
-    "auto_sync_enabled": True,
-    "auto_sync_minutes": 5,
-}
-
+CONFIG_FILE = os.path.join(os.path.dirname(__file__), "config.json")
 
 def load_config():
-    if not os.path.exists(CONFIG_FILE):
-        save_config(DEFAULT_CONFIG)
-        return dict(DEFAULT_CONFIG)
-    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-        cfg = json.load(f)
-    for k, v in DEFAULT_CONFIG.items():
-        cfg.setdefault(k, v)
-    return cfg
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error reading config.json: {e}")
+    return {}
 
-
-def save_config(cfg):
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, indent=2)
+CONFIG = load_config()
+HABITICA_USER_ID = CONFIG.get("HABITICA_USER_ID", "1a9bae15-8e7f-40f4-a4b7-d841a89e90ca")
+HABITICA_API_TOKEN = CONFIG.get("HABITICA_API_TOKEN", "c90748f7-cc6f-4c1e-8728-5c31c7acd87d")
+THEME = CONFIG.get("THEME", {})
