@@ -1,11 +1,6 @@
 """
 Core leveling logic for the Hunter Status Window.
-
-Loads baseline level state from data.json and applies live API updates seamlessly.
 """
-
-import json
-import os
 
 STATS = ["Discipline", "Deep Focus", "Activity", "Intelligence", "Hacking"]
 
@@ -31,42 +26,103 @@ PRIORITY_TO_DIFFICULTY = {
     2: "hard",
 }
 
-
 def priority_to_difficulty(priority):
     return PRIORITY_TO_DIFFICULTY.get(priority, "easy")
-
 
 def new_stat_block():
     return {stat: {"level": 1, "progress": 0.0} for stat in STATS}
 
+def apply_progress(stats_block, stat_name, increment, direction="up"):
+    if stat_name not in stats_block:
+        return 0
 
-def load_base_stats():
-    """Loads recorded baseline stats from data.json."""
-    if os.path.exists("data.json"):
-        try:
-            with open("data.json", "r") as f:
-                data = json.load(f)
-                if "stats" in data:
-                    return data["stats"]
-        except Exception:
-            pass
-    return new_stat_block()
+    entry = stats_block[stat_name]
+    level_change = 0
+    direction = str(direction).strip().lower()
 
+    if direction == "down":
+        entry["progress"] = round(entry["progress"] - increment, 6)
+        while entry["progress"] < 0.0:
+            if entry["level"] > 1:
+                entry["level"] -= 1
+                entry["progress"] = round(entry["progress"] + 1.0, 6)
+                level_change -= 1
+            else:
+                entry["progress"] = 0.0
+                break
+    else:
+        entry["progress"] = round(entry["progress"] + increment, 6)
+        while entry["progress"] >= 1.0:
+            entry["progress"] = round(entry["progress"] - 1.0, 6)
+            entry["level"] += 1
+            level_change += 1
+
+    return level_change
+
+def is_missed_daily(task_data):
+    if task_data.get("type") != "daily":
+        return False
+    if task_data.get("completed", True):
+        return False
+    is_due = task_data.get("isDue", task_data.get("isDueToday", True))
+    return bool(is_due)
+
+def process_habitica_event(stats_block, task_data, tag_id_to_name, direction="up"):
+    tag_ids = task_data.get("tags", [])
+    stat_name = match_stat_from_tags(tag_ids, tag_id_to_name)
+
+    if not stat_name:
+        return None, 0
+
+    priority = task_data.get("priority", 1)
+    difficulty = priority_to_difficulty(priority)
+    increment = DIFFICULTY_INCREMENT[difficulty]
+
+    if is_missed_daily(task_data):
+        event_direction = "down"
+    else:
+        event_direction = task_data.get("direction", direction)
+
+    level_change = apply_progress(
+        stats_block=stats_block,
+        stat_name=stat_name,
+        increment=increment,
+        direction=event_direction,
+    )
+
+    return stat_name, level_change
+
+def process_daily_misses(stats_block, dailies, tag_id_to_name):
+    results = []
+    for task_data in dailies:
+        if not is_missed_daily(task_data):
+            continue
+
+        stat_name, level_change = process_habitica_event(
+            stats_block=stats_block,
+            task_data=task_data,
+            tag_id_to_name=tag_id_to_name,
+        )
+        if stat_name:
+            results.append((task_data.get("id"), stat_name, level_change))
+
+    return results
 
 def overall_level(stats_block):
     total_weight = sum(WEIGHTS.values())
     weighted_sum = sum(stats_block[s]["level"] * WEIGHTS[s] for s in STATS)
     return round(weighted_sum / total_weight)
 
+def normalize_tag_name(name):
+    return " ".join(name.strip().lower().split())
 
-def calculate_stats(raw_data):
-    """
-    Returns baseline stats stored in data.json.
-    If raw_data contains processed stats from desktop local state, returns those directly.
-    """
-    # 1. Check if raw_data already contains a computed stats block
-    if isinstance(raw_data, dict) and "stats" in raw_data and isinstance(raw_data["stats"], dict):
-        return raw_data["stats"]
-
-    # 2. Otherwise load saved snapshot from data.json
-    return load_base_stats()
+def match_stat_from_tags(tag_ids, tag_id_to_name):
+    normalized_stats = {normalize_tag_name(s): s for s in STATS}
+    for tid in tag_ids or []:
+        name = tag_id_to_name.get(tid)
+        if not name:
+            continue
+        norm = normalize_tag_name(name)
+        if norm in normalized_stats:
+            return normalized_stats[norm]
+    return None
