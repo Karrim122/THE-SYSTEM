@@ -284,7 +284,7 @@ def display_dashboard():
             if not stats_block:
                 stats_block = calculate_stats_from_habitica(raw_data)
         except Exception as e:
-            st.sidebar.error(f"Sync error: {e}")
+            st.error(f"Sync error: {e}")
 
     if not stats_block:
         if stats_engine and hasattr(stats_engine, "new_stat_block"):
