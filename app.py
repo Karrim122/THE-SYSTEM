@@ -201,6 +201,14 @@ view_mode = st.session_state.view_mode
 raw_level = stats_engine.overall_level(data["stats"]) + data.get("overall_level_offset", 0)
 effective_overall = max(1, int(raw_level))
 
+# --- Level Up Notification Logic ---
+if "previous_overall_level" not in st.session_state:
+    st.session_state.previous_overall_level = effective_overall
+elif effective_overall > st.session_state.previous_overall_level:
+    st.toast("🎉 You leveled up!", icon="⚡")
+    st.session_state.previous_overall_level = effective_overall
+# -----------------------------------
+
 try:
     rank_title = milestones.get_rank_title(effective_overall)
 except AttributeError:
