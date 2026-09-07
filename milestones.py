@@ -4,6 +4,7 @@ Milestone / Ability definitions for the Player Window Stats system.
 
 MILESTONES = {
     "Discipline": [
+        (5, "D RANK", "I'm able to consciously commit to a simple daily habit and actually do it, where most people forget by day three."),
         (10, "C RANK", "I'm able to hold myself to something in writing, not just in words — most people just talk about it."),
         (20, "B RANK", "I'm able to outlast people who quit before I do."),
         (35, "A RANK", "I'm able to keep a promise to myself even when no one's watching, where most people only perform for an audience."),
@@ -13,6 +14,7 @@ MILESTONES = {
         (100, "ANOTHER LEVEL", "I'm on another level in discipline — it's just who I am, not something I practice."),
     ],
     "Deep Focus": [
+        (5, "D RANK", "I'm able to consciously put my phone out of reach before starting a task, where most people leave all their notifications on."),
         (10, "C RANK", "I'm able to sit through a 25-minute focus block, phone in another room, with zero urge to check it, while most people can't last 5 minutes without reaching for theirs."),
         (20, "B RANK", "I'm able to spend 90 minutes on a genuinely hard book or course, undistracted, longer than most people manage in a full day."),
         (35, "A RANK", "I'm able to hold a 3-hour deep work session on a complex project without losing the thread, something most people fragment across a dozen tabs."),
@@ -22,6 +24,7 @@ MILESTONES = {
         (100, "ANOTHER LEVEL", "I'm on another level in focus — flow state is available at will, almost instantly, whenever the work demands it."),
     ],
     "Activity": [
+        (5, "D RANK", "I'm able to get up and move my body intentionally when scheduled, where most people let their mood dictate their movement."),
         (10, "C RANK", "I'm able to say I move my body every day — and I've got the gear to match that identity, unlike most people who buy it and let it collect dust."),
         (20, "B RANK", "I'm able to start a structured program (gym plan, running plan) and trust myself to stick with it, where most people quit by week two."),
         (35, "A RANK ", "I'm able to hit a real physical milestone — first 5k, a strength PR — earned through reps most people never put in."),
@@ -31,6 +34,7 @@ MILESTONES = {
         (100, "ANOTHER LEVEL", "I'm on another level in fitness — my body and energy are just a baseline now, not something I have to manage."),
     ],
     "Intelligence": [
+        (5, "D RANK", "I'm able to sit down with material I actually want to learn, instead of mindlessly scrolling like most people do."),
         (10, "C RANK", "I'm able to say I finished a real book, or played real rated chess games, start to finish, where most people quit halfway."),
         (20, "B RANK", "I'm able to take on denser material — technical nonfiction, a real chess ladder or club — past where most people stop."),
         (35, "A RANK", "I'm able to produce something from what I learned — an essay, notes, a write-up worth sharing — instead of just consuming like most people do."),
@@ -40,6 +44,7 @@ MILESTONES = {
         (100, "ANOTHER LEVEL", "I'm on another level in intelligence — thinking clearly under any condition is just identity now, not a skill I'm building."),
     ],
     "Hacking": [
+        (5, "D RANK", "I'm able to configure a basic technical environment and grasp entry-level concepts, where most people give up at the installation screen."),
         (10, "C RANK", "I'm able to hold networking fundamentals down cold (CCNA-level: TCP/IP, routing, subnetting) and I've earned a proper home lab for it, past where most beginners stall out."),
         (20, "B RANK", "I'm able to move from networks into the OS itself — Linux and Windows internals — commanding it instead of just clicking around like most people do."),
         (35, "A RANK", "I'm able to capture my first independent CTF flag, or finish a real cert, solo — proof the fundamentals stuck, where most people never get past tutorials."),
