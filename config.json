@@ -1,6 +1,11 @@
 {
-  "habitica_user_id": "1a9bae15-8e7f-40f4-a4b7-d841a89e90ca",
-  "habitica_api_token": "c90748f7-cc6f-4c1e-8728-5c31c7acd87d",
-  "auto_sync_enabled": true,
-  "auto_sync_minutes": 4
+  "HABITICA_USER_ID": "1a9bae15-8e7f-40f4-a4b7-d841a89e90ca",
+  "HABITICA_API_TOKEN": "c90748f7-cc6f-4c1e-8728-5c31c7acd87d",
+  "THEME": {
+    "primaryColor": "#00d2ff",
+    "backgroundColor": "#030712",
+    "secondaryBackgroundColor": "#0b0f19",
+    "textColor": "#f8fafc",
+    "font": "sans serif"
+  }
 }
