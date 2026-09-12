@@ -114,6 +114,18 @@ st.markdown(f"""
     /* Seamless Overlay Button (Makes the whole card clickable, with no visible extra button) */
     div[class*="st-key-stat_card_"] {{
         position: relative;
+        overflow: visible !important;
+    }}
+    /* Streamlit wraps every element (the markdown card AND the button) in its own
+       child wrapper div. Since the button becomes position:absolute (removed from
+       flow), that wrapper collapses to 0 height - if it clips overflow, the button
+       gets hidden/unclickable even though the card underneath still shows hover
+       effects. Force every wrapper inside the card to stay visible/unclipped. */
+    div[class*="st-key-stat_card_"] > div,
+    div[class*="st-key-stat_card_"] [data-testid="stVerticalBlock"],
+    div[class*="st-key-stat_card_"] [data-testid="element-container"],
+    div[class*="st-key-stat_card_"] [data-testid="stElementContainer"] {{
+        overflow: visible !important;
     }}
     div[class*="st-key-stat_card_"] div[data-testid="stButton"],
     div[class*="st-key-stat_card_"] div.stButton {{
@@ -125,6 +137,7 @@ st.markdown(f"""
         margin: 0 !important;
         padding: 0 !important;
         z-index: 10 !important;
+        pointer-events: auto !important;
     }}
     div[class*="st-key-stat_card_"] div[data-testid="stButton"] > button,
     div[class*="st-key-stat_card_"] div.stButton > button {{
@@ -136,6 +149,7 @@ st.markdown(f"""
         cursor: pointer !important;
         padding: 0 !important;
         margin: 0 !important;
+        pointer-events: auto !important;
     }}
 
     /* Vertical Control Panel Divider */
