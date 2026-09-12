@@ -67,76 +67,65 @@ st.markdown(f"""
     .sub-header {{ font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 15px; }}
     .level-badge {{ font-size: 42px; font-weight: 800; color: {primary_color}; text-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }}
     .rank-text {{ font-size: 16px; font-weight: bold; color: #f59e0b; }}
+    .stat-card {{ background-color: #111827; border-radius: 8px; padding: 14px; text-align: center; border: 1px solid #1e293b; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }}
     
-    /* Stat Card Styling & Hover Animations */
-    .stat-card-wrapper {{
+    /* Interactive Clickable Stat Card Container & Glow Animations */
+    .stat-card-container {{
+        position: relative;
+        margin-bottom: 6px;
+        cursor: pointer;
         transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        margin-bottom: 0px;
     }}
-    .stat-card {{ 
-        background-color: #111827; 
-        border-radius: 8px; 
-        padding: 14px; 
-        text-align: center; 
-        border: 1px solid #1e293b; 
-        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); 
-    }}
-
-    /* Overlay Invisible Click Area directly on top of Card */
-    div.stButton:has(button[aria-label*="card_btn_"]) {{
-        margin-top: -92px !important;
-        height: 88px !important;
-        margin-bottom: 15px !important;
-        position: relative !important;
-        z-index: 10 !important;
-    }}
-    div.stButton:has(button[aria-label*="card_btn_"]) > button {{
-        height: 88px !important;
-        background: transparent !important;
-        border: none !important;
-        opacity: 0 !important;
-        cursor: pointer !important;
-        width: 100% !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        box-shadow: none !important;
-    }}
-
-    /* Card Lift & Glow Hover Animations */
-    div[data-testid="stColumn"]:has(button[aria-label*="card_btn_"]:hover) .stat-card-wrapper,
-    div[data-testid="stVerticalBlock"]:has(button[aria-label*="card_btn_"]:hover) .stat-card-wrapper {{
+    .stat-card-container:hover {{
         transform: translateY(-4px) scale(1.02);
     }}
-    div[data-testid="stColumn"]:has(button[aria-label*="card_btn_"]:active) .stat-card-wrapper,
-    div[data-testid="stVerticalBlock"]:has(button[aria-label*="card_btn_"]:active) .stat-card-wrapper {{
+    .stat-card-container:active {{
         transform: translateY(-1px) scale(0.98);
     }}
 
-    /* Color-Specific Glows */
-    div[data-testid="stColumn"]:has(button[aria-label*="card_btn_Discipline"]:hover) .stat-card,
-    div[data-testid="stVerticalBlock"]:has(button[aria-label*="card_btn_Discipline"]:hover) .stat-card {{
+    .interactive-card-discipline:hover .stat-card {{
         box-shadow: 0 8px 25px rgba(244, 63, 94, 0.35), 0 0 15px rgba(244, 63, 94, 0.3);
-        border-color: #f43f5e !important;
+        border-color: #f43f5e;
     }}
-    div[data-testid="stColumn"]:has(button[aria-label*="card_btn_Deep Focus"]:hover) .stat-card,
-    div[data-testid="stVerticalBlock"]:has(button[aria-label*="card_btn_Deep Focus"]:hover) .stat-card {{
+    .interactive-card-deep-focus:hover .stat-card {{
         box-shadow: 0 8px 25px rgba(168, 85, 247, 0.35), 0 0 15px rgba(168, 85, 247, 0.3);
-        border-color: #a855f7 !important;
+        border-color: #a855f7;
     }}
-    div[data-testid="stColumn"]:has(button[aria-label*="card_btn_Activity"]:hover) .stat-card,
-    div[data-testid="stVerticalBlock"]:has(button[aria-label*="card_btn_Activity"]:hover) .stat-card {{
+    .interactive-card-activity:hover .stat-card {{
         box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35), 0 0 15px rgba(16, 185, 129, 0.3);
-        border-color: #10b981 !important;
+        border-color: #10b981;
     }}
-    div[data-testid="stColumn"]:has(button[aria-label*="card_btn_Intelligence"]:hover) .stat-card,
-    div[data-testid="stVerticalBlock"]:has(button[aria-label*="card_btn_Intelligence"]:hover) .stat-card {{
+    .interactive-card-intelligence:hover .stat-card {{
         box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35), 0 0 15px rgba(59, 130, 246, 0.3);
-        border-color: #3b82f6 !important;
+        border-color: #3b82f6;
     }}
-    div[data-testid="stColumn"]:has(button[aria-label*="card_btn_Hacking"]:hover) .stat-card,
-    div[data-testid="stVerticalBlock"]:has(button[aria-label*="card_btn_Hacking"]:hover) .stat-card {{
+    .interactive-card-hacking:hover .stat-card {{
         box-shadow: 0 8px 25px rgba(245, 158, 11, 0.35), 0 0 15px rgba(245, 158, 11, 0.3);
-        border-color: #f59e0b !important;
+        border-color: #f59e0b;
+    }}
+
+    /* Seamless Overlay Button (Makes the Card Clickable without visible extra buttons) */
+    .stat-card-container div[data-testid="stButton"],
+    .stat-card-container div.stButton {{
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        z-index: 10 !important;
+    }}
+    .stat-card-container div[data-testid="stButton"] > button,
+    .stat-card-container div.stButton > button {{
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        cursor: pointer !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }}
 
     /* Vertical Control Panel Divider */
@@ -309,23 +298,23 @@ def render_stat_card(stat_name):
     except AttributeError:
         stat_rank = f"{rank_title}"
 
-    stat_key = stat_name.lower().replace(' ', '-')
+    stat_class = f"interactive-card-{stat_name.lower().replace(' ', '-')}"
 
     st.markdown(f"""
-    <div class="stat-card-wrapper stat-card-{stat_key}">
+    <div class="stat-card-container {stat_class}">
         <div class="stat-card" style="border-top: 3px solid {color};">
             <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
             <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
             <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
         </div>
-    </div>
     """, unsafe_allow_html=True)
 
-    if st.button(f"card_btn_{stat_name}", key=f"click_card_{stat_name}", use_container_width=True):
+    if st.button("", key=f"click_card_{stat_name}", use_container_width=True):
         st.session_state.selected_stat = stat_name
         st.session_state.view_mode = "STAT_LEDGER"
         st.rerun()
 
+    st.markdown('</div>', unsafe_allow_html=True)
     st.progress(min(1.0, max(0.0, float(entry["progress"]))))
 
 if view_mode == "🏠 HUD":
