@@ -30,8 +30,8 @@ st.markdown(f"""
     /* Hide Streamlit default sidebar completely */
     [data-testid="stSidebarNav"], [data-testid="collapsedControl"] {{ display: none !important; }}
     
-    /* Small Control Buttons */
-    div.stButton > button {{
+    /* System Control Buttons (Secondary) */
+    button[data-testid="baseButton-secondary"] {{
         width: 100%;
         background-color: {sec_bg};
         color: {primary_color};
@@ -44,15 +44,43 @@ st.markdown(f"""
         margin-bottom: 6px;
         transition: all 0.2s ease;
     }}
-    div.stButton > button:hover {{
+    button[data-testid="baseButton-secondary"]:hover {{
         border-color: {primary_color};
         box-shadow: 0 0 8px rgba(0, 210, 255, 0.3);
         color: #ffffff;
         background-color: #111827;
     }}
-    div.stButton > button:active, div.stButton > button:focus {{
+    button[data-testid="baseButton-secondary"]:active, button[data-testid="baseButton-secondary"]:focus {{
         background-color: #111827;
         border-color: {primary_color};
+    }}
+
+    /* Stat Card Buttons (Primary) */
+    button[data-testid="baseButton-primary"] {{
+        width: 100%;
+        background-color: #111827;
+        border: 1px solid #1e293b;
+        border-radius: 8px;
+        padding: 16px 10px;
+        margin-bottom: 2px;
+        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        height: 100%;
+        min-height: 50px;
+    }}
+    button[data-testid="baseButton-primary"]:hover {{
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 8px 20px rgba(0, 210, 255, 0.15);
+        border-color: #334155;
+        background-color: #1e293b;
+    }}
+    button[data-testid="baseButton-primary"]:active {{
+        transform: translateY(0px) scale(0.98);
+    }}
+    button[data-testid="baseButton-primary"] p {{
+        font-size: 14px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        margin: 0;
     }}
 
     .status-card {{
@@ -67,7 +95,6 @@ st.markdown(f"""
     .sub-header {{ font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 15px; }}
     .level-badge {{ font-size: 42px; font-weight: 800; color: {primary_color}; text-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }}
     .rank-text {{ font-size: 16px; font-weight: bold; color: #f59e0b; }}
-    .stat-card {{ background-color: #111827; border-radius: 8px; padding: 14px; text-align: center; border: 1px solid #1e293b; margin-bottom: 15px; }}
     
     /* Vertical Control Panel Divider */
     .right-panel-container {{
@@ -228,21 +255,31 @@ except AttributeError:
 
 def render_stat_card(stat_name):
     entry = data["stats"][stat_name]
-    color = STAT_COLORS.get(stat_name, "#00d2ff")
     stat_lvl = int(entry["level"])
     
     try:
         stat_rank = milestones.get_stat_rank(stat_name, stat_lvl)
     except AttributeError:
         stat_rank = f"{rank_title}"
-
-    st.markdown(f"""
-    <div class="stat-card" style="border-top: 3px solid {color};">
-        <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
-        <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
-        <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
-    </div>
-    """, unsafe_allow_html=True)
+        
+    display_name = STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()
+    
+    # Map stat attributes to native Streamlit markdown colors
+    color_map = {
+        "Discipline": "red",
+        "Deep Focus": "violet",
+        "Activity": "green",
+        "Intelligence": "blue",
+        "Hacking": "orange"
+    }
+    st_color = color_map.get(stat_name, "primary")
+    
+    button_label = f":{st_color}[◈ {display_name}]  •  LVL {stat_lvl:02d}  •  {stat_rank}" if st_color != "primary" else f"◈ {display_name}  •  LVL {stat_lvl:02d}  •  {stat_rank}"
+    
+    if st.button(button_label, key=f"btn_{stat_name}", use_container_width=True, type="primary"):
+        st.session_state.view_mode = f"LEDGER_{stat_name}"
+        st.rerun()
+        
     st.progress(min(1.0, max(0.0, float(entry["progress"]))))
 
 if view_mode == "🏠 HUD":
@@ -288,43 +325,74 @@ if view_mode == "🏠 HUD":
         st.markdown('<div class="right-panel-container">', unsafe_allow_html=True)
         st.markdown('<div style="font-size: 10px; color: #64748b; font-weight: bold; margin-bottom: 8px; text-align: center;">SYSTEM</div>', unsafe_allow_html=True)
         
-        if st.button("📜 LEDGER", use_container_width=True):
-            st.session_state.view_mode = "📜 LEDGER"
-            st.rerun()
-
-        if st.button("📊 STATS", use_container_width=True):
+        # Ledger button completely removed as requested
+        if st.button("📊 STATS", use_container_width=True, type="secondary"):
             st.session_state.view_mode = "📊 STATS"
             st.rerun()
 
-        if st.button("🔄 SYNC", use_container_width=True):
+        if st.button("🔄 SYNC", use_container_width=True, type="secondary"):
             execute_sync(force=True)
             
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    if st.button("🔙 BACK TO HUD"):
+    if st.button("🔙 BACK TO HUD", type="secondary"):
         st.session_state.view_mode = "🏠 HUD"
         st.rerun()
 
-    if view_mode == "📜 LEDGER":
-        st.markdown('<div class="hud-header">[ ABILITY LEDGER ]</div><br>', unsafe_allow_html=True)
-        for stat in stats_engine.STATS:
-            curr_lvl = int(data["stats"][stat]["level"])
-            st.markdown(f"#### ◈ {STAT_DISPLAY_NAMES.get(stat, stat).upper()} (Lv.{curr_lvl})")
+    if view_mode.startswith("LEDGER_"):
+        stat_name = view_mode.split("_")[1]
+        display_name = STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()
+        color = STAT_COLORS.get(stat_name, primary_color)
+        curr_lvl = int(data["stats"][stat_name]["level"])
+        
+        st.markdown(f'''
+        <div style="border-bottom: 2px solid {color}; padding-bottom: 10px; margin-bottom: 20px;">
+            <div style="font-size: 32px; font-weight: 900; color: {color}; letter-spacing: 2px;">
+                ◈ {display_name} LEDGER
+            </div>
+            <div style="font-size: 14px; color: #64748b; font-weight: bold;">
+                CURRENT MASTERY: LEVEL {curr_lvl:02d}
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
+        
+        try:
+            m_list = milestones.milestones_for(stat_name)
+        except AttributeError:
+            m_list = getattr(milestones, "MILESTONES", {}).get(stat_name, [])
             
-            try:
-                m_list = milestones.milestones_for(stat)
-            except AttributeError:
-                m_list = getattr(milestones, "MILESTONES", {}).get(stat, [])
-                
+        if not m_list:
+            st.info("No milestones recorded for this attribute yet.")
+        else:
             for lvl, title, desc in m_list:
                 unlocked = curr_lvl >= lvl
-                st.markdown(f"*{'✅' if unlocked else '🔒'}* **LV {lvl:02d} - {title.upper()}**: {desc}")
+                status_color = color if unlocked else "#475569"
+                card_bg = sec_bg if unlocked else "#0f172a"
+                icon = "✨" if unlocked else "🔒"
+                opacity = "1.0" if unlocked else "0.5"
+                border = f"1px solid {color}" if unlocked else "1px dashed #334155"
+                box_shadow = f"0 0 12px {color}33" if unlocked else "none"
+                
+                st.markdown(f'''
+                <div style="background-color: {card_bg}; border: {border}; border-radius: 8px; padding: 16px; margin-bottom: 12px; opacity: {opacity}; box-shadow: {box_shadow}; transition: all 0.3s ease;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="font-size: 18px; font-weight: 800; color: {status_color};">
+                            {icon} LVL {lvl:02d} : {title.upper()}
+                        </div>
+                        <div style="font-size: 12px; font-weight: bold; color: #64748b; background-color: #111827; padding: 4px 8px; border-radius: 4px;">
+                            {'UNLOCKED' if unlocked else 'LOCKED'}
+                        </div>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.5;">
+                        {desc}
+                    </div>
+                </div>
+                ''', unsafe_allow_html=True)
 
     elif view_mode == "📊 STATS":
         st.markdown('<div class="hud-header" style="margin-bottom: 10px;">[ SYSTEM OVERVIEW ]</div>', unsafe_allow_html=True)
 
-        # 2-column layout to prevent vertical scrolling
         stats_left, stats_right = st.columns([1, 1.2])
 
         with stats_left:
@@ -345,7 +413,6 @@ else:
             balance_ratio = (lowest_lvl / highest_lvl * 100.0) if highest_lvl > 0 else 100.0
             sync_date = data.get("last_synced", date.today().isoformat())
 
-            # Compacted margin and padding for Analytics cards
             st.markdown(f"""
             <div class="status-card" style="padding: 10px; margin-bottom: 8px;">
                 <div class="metric-label" style="margin-bottom: 2px;">TOTAL ATTRIBUTE POINTS</div>
@@ -382,7 +449,6 @@ else:
                 display = STAT_DISPLAY_NAMES.get(stat, stat).upper()
                 pct = min(100, int((gain / max_gain) * 100))
                 
-                # Compacted Daily EXP bars
                 st.markdown(f'''
                 <div style="margin-bottom: 8px; background-color: {sec_bg}; padding: 10px; border-radius: 6px; border: 1px solid #1e293b;">
                     <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: {color}; margin-bottom: 4px;">
