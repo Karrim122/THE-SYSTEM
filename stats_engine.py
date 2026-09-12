@@ -5,11 +5,11 @@ Core leveling logic for the Hunter Status Window.
 STATS = ["Discipline", "Deep Focus", "Activity", "Intelligence", "Hacking"]
 
 WEIGHTS = {
-    "Discipline": 5,
-    "Deep Focus": 5,
+    "Discipline": 4,
+    "Deep Focus": 3,
     "Activity": 1,
-    "Intelligence": 3,
-    "Hacking": 4,
+    "Intelligence": 2,
+    "Hacking": 5,
 }
 
 DIFFICULTY_INCREMENT = {
