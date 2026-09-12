@@ -30,8 +30,8 @@ st.markdown(f"""
     /* Hide Streamlit default sidebar completely */
     [data-testid="stSidebarNav"], [data-testid="collapsedControl"] {{ display: none !important; }}
     
-    /* System Control Buttons (Secondary) */
-    button[data-testid="baseButton-secondary"] {{
+    /* Small Control Buttons */
+    div.stButton > button {{
         width: 100%;
         background-color: {sec_bg};
         color: {primary_color};
@@ -44,43 +44,15 @@ st.markdown(f"""
         margin-bottom: 6px;
         transition: all 0.2s ease;
     }}
-    button[data-testid="baseButton-secondary"]:hover {{
+    div.stButton > button:hover {{
         border-color: {primary_color};
         box-shadow: 0 0 8px rgba(0, 210, 255, 0.3);
         color: #ffffff;
         background-color: #111827;
     }}
-    button[data-testid="baseButton-secondary"]:active, button[data-testid="baseButton-secondary"]:focus {{
+    div.stButton > button:active, div.stButton > button:focus {{
         background-color: #111827;
         border-color: {primary_color};
-    }}
-
-    /* Stat Card Buttons (Primary) */
-    button[data-testid="baseButton-primary"] {{
-        width: 100%;
-        background-color: #111827;
-        border: 1px solid #1e293b;
-        border-radius: 8px;
-        padding: 16px 10px;
-        margin-bottom: 2px;
-        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-        height: 100%;
-        min-height: 50px;
-    }}
-    button[data-testid="baseButton-primary"]:hover {{
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 8px 20px rgba(0, 210, 255, 0.15);
-        border-color: #334155;
-        background-color: #1e293b;
-    }}
-    button[data-testid="baseButton-primary"]:active {{
-        transform: translateY(0px) scale(0.98);
-    }}
-    button[data-testid="baseButton-primary"] p {{
-        font-size: 14px;
-        font-weight: bold;
-        letter-spacing: 1px;
-        margin: 0;
     }}
 
     .status-card {{
@@ -95,7 +67,65 @@ st.markdown(f"""
     .sub-header {{ font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 15px; }}
     .level-badge {{ font-size: 42px; font-weight: 800; color: {primary_color}; text-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }}
     .rank-text {{ font-size: 16px; font-weight: bold; color: #f59e0b; }}
+    .stat-card {{ background-color: #111827; border-radius: 8px; padding: 14px; text-align: center; border: 1px solid #1e293b; margin-bottom: 0px; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }}
     
+    /* Interactive Clickable Stat Block Animations */
+    .interactive-stat-card {{
+        position: relative;
+        margin-bottom: 15px;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        cursor: pointer;
+    }}
+    .interactive-stat-card:hover {{
+        transform: translateY(-4px) scale(1.02);
+    }}
+    .interactive-stat-card:active {{
+        transform: translateY(-1px) scale(0.98);
+    }}
+
+    .interactive-card-discipline:hover .stat-card {{
+        box-shadow: 0 8px 25px rgba(244, 63, 94, 0.35), 0 0 15px rgba(244, 63, 94, 0.3);
+        border-color: #f43f5e;
+    }}
+    .interactive-card-deep-focus:hover .stat-card {{
+        box-shadow: 0 8px 25px rgba(168, 85, 247, 0.35), 0 0 15px rgba(168, 85, 247, 0.3);
+        border-color: #a855f7;
+    }}
+    .interactive-card-activity:hover .stat-card {{
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35), 0 0 15px rgba(16, 185, 129, 0.3);
+        border-color: #10b981;
+    }}
+    .interactive-card-intelligence:hover .stat-card {{
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35), 0 0 15px rgba(59, 130, 246, 0.3);
+        border-color: #3b82f6;
+    }}
+    .interactive-card-hacking:hover .stat-card {{
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.35), 0 0 15px rgba(245, 158, 11, 0.3);
+        border-color: #f59e0b;
+    }}
+
+    /* Transparent Click Area Overlay */
+    .interactive-stat-card div.stButton {{
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        z-index: 10 !important;
+    }}
+    .interactive-stat-card div.stButton > button {{
+        width: 100% !important;
+        height: 100% !important;
+        opacity: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        cursor: pointer !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }}
+
     /* Vertical Control Panel Divider */
     .right-panel-container {{
         border-left: 2px solid #1e293b;
@@ -132,6 +162,9 @@ if "last_sync_timestamp" not in st.session_state:
 
 if "view_mode" not in st.session_state:
     st.session_state.view_mode = "🏠 HUD"
+
+if "selected_stat" not in st.session_state:
+    st.session_state.selected_stat = "Discipline"
 
 data = st.session_state.data
 
@@ -255,31 +288,31 @@ except AttributeError:
 
 def render_stat_card(stat_name):
     entry = data["stats"][stat_name]
+    color = STAT_COLORS.get(stat_name, "#00d2ff")
     stat_lvl = int(entry["level"])
     
     try:
         stat_rank = milestones.get_stat_rank(stat_name, stat_lvl)
     except AttributeError:
         stat_rank = f"{rank_title}"
-        
-    display_name = STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()
-    
-    # Map stat attributes to native Streamlit markdown colors
-    color_map = {
-        "Discipline": "red",
-        "Deep Focus": "violet",
-        "Activity": "green",
-        "Intelligence": "blue",
-        "Hacking": "orange"
-    }
-    st_color = color_map.get(stat_name, "primary")
-    
-    button_label = f":{st_color}[◈ {display_name}]  •  LVL {stat_lvl:02d}  •  {stat_rank}" if st_color != "primary" else f"◈ {display_name}  •  LVL {stat_lvl:02d}  •  {stat_rank}"
-    
-    if st.button(button_label, key=f"btn_{stat_name}", use_container_width=True, type="primary"):
-        st.session_state.view_mode = f"LEDGER_{stat_name}"
+
+    stat_class = f"interactive-card-{stat_name.lower().replace(' ', '-')}"
+
+    st.markdown(f"""
+    <div class="interactive-stat-card {stat_class}">
+        <div class="stat-card" style="border-top: 3px solid {color};">
+            <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
+            <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
+            <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    if st.button(f"Open {stat_name} Ledger", key=f"btn_card_{stat_name}", use_container_width=True):
+        st.session_state.selected_stat = stat_name
+        st.session_state.view_mode = "STAT_LEDGER"
         st.rerun()
-        
+
+    st.markdown('</div>', unsafe_allow_html=True)
     st.progress(min(1.0, max(0.0, float(entry["progress"]))))
 
 if view_mode == "🏠 HUD":
@@ -324,75 +357,91 @@ if view_mode == "🏠 HUD":
     with right_panel:
         st.markdown('<div class="right-panel-container">', unsafe_allow_html=True)
         st.markdown('<div style="font-size: 10px; color: #64748b; font-weight: bold; margin-bottom: 8px; text-align: center;">SYSTEM</div>', unsafe_allow_html=True)
-        
-        # Ledger button completely removed as requested
-        if st.button("📊 STATS", use_container_width=True, type="secondary"):
+
+        if st.button("📊 STATS", use_container_width=True):
             st.session_state.view_mode = "📊 STATS"
             st.rerun()
 
-        if st.button("🔄 SYNC", use_container_width=True, type="secondary"):
+        if st.button("🔄 SYNC", use_container_width=True):
             execute_sync(force=True)
             
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    if st.button("🔙 BACK TO HUD", type="secondary"):
-        st.session_state.view_mode = "🏠 HUD"
-        st.rerun()
+    if view_mode == "STAT_LEDGER":
+        selected_stat = st.session_state.get("selected_stat", "Discipline")
+        stat_color = STAT_COLORS.get(selected_stat, primary_color)
+        display_stat_name = STAT_DISPLAY_NAMES.get(selected_stat, selected_stat).upper()
+        entry = data["stats"][selected_stat]
+        curr_lvl = int(entry["level"])
 
-    if view_mode.startswith("LEDGER_"):
-        stat_name = view_mode.split("_")[1]
-        display_name = STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()
-        color = STAT_COLORS.get(stat_name, primary_color)
-        curr_lvl = int(data["stats"][stat_name]["level"])
-        
-        st.markdown(f'''
-        <div style="border-bottom: 2px solid {color}; padding-bottom: 10px; margin-bottom: 20px;">
-            <div style="font-size: 32px; font-weight: 900; color: {color}; letter-spacing: 2px;">
-                ◈ {display_name} LEDGER
-            </div>
-            <div style="font-size: 14px; color: #64748b; font-weight: bold;">
-                CURRENT MASTERY: LEVEL {curr_lvl:02d}
+        try:
+            stat_rank = milestones.get_stat_rank(selected_stat, curr_lvl)
+        except AttributeError:
+            stat_rank = f"{rank_title}"
+
+        col_back, col_blank = st.columns([1, 4])
+        with col_back:
+            if st.button("🔙 BACK TO HUD", use_container_width=True):
+                st.session_state.view_mode = "🏠 HUD"
+                st.rerun()
+
+        st.markdown(f"""
+        <div style="border-left: 4px solid {stat_color}; background-color: {sec_bg}; padding: 20px; border-radius: 8px; margin-top: 15px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); border-top: 1px solid #1e293b; border-right: 1px solid #1e293b; border-bottom: 1px solid #1e293b;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 11px; color: #64748b; font-weight: bold; letter-spacing: 1px;">SYSTEM // ABILITY LEDGER</div>
+                    <div style="font-size: 28px; font-weight: 800; color: {stat_color}; letter-spacing: 1px; margin-top: 4px;">◈ {display_stat_name}</div>
+                    <div style="font-size: 12px; color: #f59e0b; font-weight: bold; margin-top: 4px;">RANK: [{stat_rank}]</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 38px; font-weight: 800; color: {stat_color}; text-shadow: 0 0 12px {stat_color}60;">LVL {curr_lvl:02d}</div>
+                    <div style="font-size: 11px; color: #94a3b8; font-weight: bold; margin-top: 2px;">EXP PROGRESS: {entry['progress']*100:.1f}%</div>
+                </div>
             </div>
         </div>
-        ''', unsafe_allow_html=True)
-        
+        """, unsafe_allow_html=True)
+
+        st.progress(min(1.0, max(0.0, float(entry["progress"]))))
+
+        st.markdown('<div style="font-size: 13px; font-weight: bold; color: #64748b; letter-spacing: 1px; margin-top: 25px; margin-bottom: 15px; text-transform: uppercase;">ATTRIBUTE MILESTONES & CAPABILITIES</div>', unsafe_allow_html=True)
+
         try:
-            m_list = milestones.milestones_for(stat_name)
+            m_list = milestones.milestones_for(selected_stat)
         except AttributeError:
-            m_list = getattr(milestones, "MILESTONES", {}).get(stat_name, [])
-            
+            m_list = getattr(milestones, "MILESTONES", {}).get(selected_stat, [])
+
         if not m_list:
-            st.info("No milestones recorded for this attribute yet.")
+            st.info("No milestone records available for this stat.")
         else:
             for lvl, title, desc in m_list:
                 unlocked = curr_lvl >= lvl
-                status_color = color if unlocked else "#475569"
-                card_bg = sec_bg if unlocked else "#0f172a"
-                icon = "✨" if unlocked else "🔒"
-                opacity = "1.0" if unlocked else "0.5"
-                border = f"1px solid {color}" if unlocked else "1px dashed #334155"
-                box_shadow = f"0 0 12px {color}33" if unlocked else "none"
-                
-                st.markdown(f'''
-                <div style="background-color: {card_bg}; border: {border}; border-radius: 8px; padding: 16px; margin-bottom: 12px; opacity: {opacity}; box-shadow: {box_shadow}; transition: all 0.3s ease;">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <div style="font-size: 18px; font-weight: 800; color: {status_color};">
-                            {icon} LVL {lvl:02d} : {title.upper()}
-                        </div>
-                        <div style="font-size: 12px; font-weight: bold; color: #64748b; background-color: #111827; padding: 4px 8px; border-radius: 4px;">
-                            {'UNLOCKED' if unlocked else 'LOCKED'}
-                        </div>
+                status_icon = "⚡ UNLOCKED" if unlocked else "🔒 LOCKED"
+                card_bg = "#111827" if unlocked else "#0b0f19"
+                border_style = f"1px solid {stat_color}60" if unlocked else "1px solid #1e293b"
+                title_color = text_color if unlocked else "#64748b"
+                badge_bg = f"{stat_color}20" if unlocked else "#1e293b"
+                badge_color = stat_color if unlocked else "#475569"
+
+                st.markdown(f"""
+                <div style="background-color: {card_bg}; border: {border_style}; border-radius: 8px; padding: 16px; margin-bottom: 12px; transition: all 0.2s ease;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="background-color: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; letter-spacing: 0.5px;">REQ: LVL {lvl:02d}</span>
+                        <span style="font-size: 11px; font-weight: bold; color: {'#10b981' if unlocked else '#64748b'};">{status_icon}</span>
                     </div>
-                    <div style="margin-top: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.5;">
-                        {desc}
-                    </div>
+                    <div style="font-size: 16px; font-weight: bold; color: {title_color}; margin-bottom: 4px;">{title.upper()}</div>
+                    <div style="font-size: 13px; color: {'#94a3b8' if unlocked else '#475569'}; line-height: 1.4;">{desc}</div>
                 </div>
-                ''', unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
 
     elif view_mode == "📊 STATS":
+        if st.button("🔙 BACK TO HUD"):
+            st.session_state.view_mode = "🏠 HUD"
+            st.rerun()
+
         st.markdown('<div class="hud-header" style="margin-bottom: 10px;">[ SYSTEM OVERVIEW ]</div>', unsafe_allow_html=True)
 
+        # 2-column layout to prevent vertical scrolling
         stats_left, stats_right = st.columns([1, 1.2])
 
         with stats_left:
@@ -413,6 +462,7 @@ else:
             balance_ratio = (lowest_lvl / highest_lvl * 100.0) if highest_lvl > 0 else 100.0
             sync_date = data.get("last_synced", date.today().isoformat())
 
+            # Compacted margin and padding for Analytics cards
             st.markdown(f"""
             <div class="status-card" style="padding: 10px; margin-bottom: 8px;">
                 <div class="metric-label" style="margin-bottom: 2px;">TOTAL ATTRIBUTE POINTS</div>
@@ -449,6 +499,7 @@ else:
                 display = STAT_DISPLAY_NAMES.get(stat, stat).upper()
                 pct = min(100, int((gain / max_gain) * 100))
                 
+                # Compacted Daily EXP bars
                 st.markdown(f'''
                 <div style="margin-bottom: 8px; background-color: {sec_bg}; padding: 10px; border-radius: 6px; border: 1px solid #1e293b;">
                     <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: {color}; margin-bottom: 4px;">
