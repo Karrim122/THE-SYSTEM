@@ -265,20 +265,20 @@ if view_mode == "🏠 HUD":
     main_grid, right_panel = st.columns([5.2, 0.8])
 
     with main_grid:
-        # Row 1: Discipline, Deep Focus
-        r1_col1, r1_col2 = st.columns(2)
+        # Row 1: Discipline, Deep Focus (narrowed using spacer columns)
+        spacer_l1, r1_col1, r1_col2, spacer_r1 = st.columns([1, 2.5, 2.5, 1])
         with r1_col1:
             render_stat_card("Discipline")
         with r1_col2:
             render_stat_card("Deep Focus")
 
-        # Row 2: Career (Hacking) in the middle
-        r2_col1, r2_col2, r2_col3 = st.columns([1, 2, 1])
+        # Row 2: Career (Hacking) in the middle (narrowed using spacer columns)
+        spacer_l2, r2_col2, spacer_r2 = st.columns([2.25, 2.5, 2.25])
         with r2_col2:
             render_stat_card("Hacking")  # Displays as "Career"
 
-        # Row 3: Intelligence, Physical (Activity)
-        r3_col1, r3_col2 = st.columns(2)
+        # Row 3: Intelligence, Physical (Activity) (narrowed using spacer columns)
+        spacer_l3, r3_col1, r3_col2, spacer_r3 = st.columns([1, 2.5, 2.5, 1])
         with r3_col1:
             render_stat_card("Intelligence")
         with r3_col2:
@@ -322,69 +322,75 @@ else:
                 st.markdown(f"*{'✅' if unlocked else '🔒'}* **LV {lvl:02d} - {title.upper()}**: {desc}")
 
     elif view_mode == "📊 STATS":
-        st.markdown('<div class="hud-header">[ SYSTEM ANALYTICS ]</div><br>', unsafe_allow_html=True)
+        st.markdown('<div class="hud-header" style="margin-bottom: 10px;">[ SYSTEM OVERVIEW ]</div>', unsafe_allow_html=True)
 
-        total_pts = sum(int(data["stats"][s]["level"]) for s in stats_engine.STATS)
-        
-        highest_stat = max(stats_engine.STATS, key=lambda s: data["stats"][s]["level"])
-        highest_lvl = int(data["stats"][highest_stat]["level"])
-        highest_display = STAT_DISPLAY_NAMES.get(highest_stat, highest_stat).upper()
-        highest_color = STAT_COLORS.get(highest_stat, primary_color)
-        
-        lowest_stat = min(stats_engine.STATS, key=lambda s: data["stats"][s]["level"])
-        lowest_lvl = int(data["stats"][lowest_stat]["level"])
-        lowest_display = STAT_DISPLAY_NAMES.get(lowest_stat, lowest_stat).upper()
-        lowest_color = STAT_COLORS.get(lowest_stat, primary_color)
+        # 2-column layout to prevent vertical scrolling
+        stats_left, stats_right = st.columns([1, 1.2])
 
-        balance_ratio = (lowest_lvl / highest_lvl * 100.0) if highest_lvl > 0 else 100.0
-        sync_date = data.get("last_synced", date.today().isoformat())
-
-        st.markdown(f"""
-        <div class="status-card">
-            <div class="metric-label">TOTAL ATTRIBUTE POINTS</div>
-            <div class="metric-val">{total_pts} PTS</div>
-        </div>
-        <div class="status-card">
-            <div class="metric-label">HIGHEST ATTRIBUTE</div>
-            <div class="metric-val" style="color: {highest_color};">{highest_display} (LVL {highest_lvl})</div>
-        </div>
-        <div class="status-card">
-            <div class="metric-label">LOWEST ATTRIBUTE</div>
-            <div class="metric-val" style="color: {lowest_color};">{lowest_display} (LVL {lowest_lvl})</div>
-        </div>
-        <div class="status-card">
-            <div class="metric-label">ATTRIBUTE BALANCE RATIO</div>
-            <div class="metric-val">{balance_ratio:.1f}% CONVERGENCE</div>
-        </div>
-        <div class="status-card">
-            <div class="metric-label">SYSTEM SYNC DATE</div>
-            <div class="metric-val">{sync_date}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # -- Today's Exp Visual Tracker Divider --
-        st.markdown("<hr style='border: 1px solid #1e293b; margin: 30px 0;'>", unsafe_allow_html=True)
-        st.markdown('<div class="hud-header">[ DAILY EXP YIELD ]</div><br>', unsafe_allow_html=True)
-
-        gains = data.get("today_gains", {})
-        max_gain = max([gains.get(s, 0.0) for s in stats_engine.STATS] + [0.01])
-        
-        for stat in stats_engine.STATS:
-            gain = gains.get(stat, 0.0)
-            if gain < 0: 
-                gain = 0.0  # Floor visual tracking at 0 for aesthetics
-            color = STAT_COLORS.get(stat, primary_color)
-            display = STAT_DISPLAY_NAMES.get(stat, stat).upper()
-            pct = min(100, int((gain / max_gain) * 100))
+        with stats_left:
+            st.markdown('<div style="font-size: 14px; font-weight: bold; color: #64748b; letter-spacing: 1px; margin-bottom: 10px;">ANALYTICS</div>', unsafe_allow_html=True)
             
-            st.markdown(f'''
-            <div style="margin-bottom: 12px; background-color: {sec_bg}; padding: 12px; border-radius: 6px; border: 1px solid #1e293b;">
-                <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: {color}; margin-bottom: 6px;">
-                    <span>◈ {display}</span>
-                    <span>+{gain:.2f} EXP</span>
-                </div>
-                <div style="width: 100%; background-color: #111827; border-radius: 4px; height: 10px;">
-                    <div style="width: {pct}%; background-color: {color}; height: 100%; border-radius: 4px; box-shadow: 0 0 8px {color}80;"></div>
-                </div>
+            total_pts = sum(int(data["stats"][s]["level"]) for s in stats_engine.STATS)
+            
+            highest_stat = max(stats_engine.STATS, key=lambda s: data["stats"][s]["level"])
+            highest_lvl = int(data["stats"][highest_stat]["level"])
+            highest_display = STAT_DISPLAY_NAMES.get(highest_stat, highest_stat).upper()
+            highest_color = STAT_COLORS.get(highest_stat, primary_color)
+            
+            lowest_stat = min(stats_engine.STATS, key=lambda s: data["stats"][s]["level"])
+            lowest_lvl = int(data["stats"][lowest_stat]["level"])
+            lowest_display = STAT_DISPLAY_NAMES.get(lowest_stat, lowest_stat).upper()
+            lowest_color = STAT_COLORS.get(lowest_stat, primary_color)
+
+            balance_ratio = (lowest_lvl / highest_lvl * 100.0) if highest_lvl > 0 else 100.0
+            sync_date = data.get("last_synced", date.today().isoformat())
+
+            # Compacted margin and padding for Analytics cards
+            st.markdown(f"""
+            <div class="status-card" style="padding: 10px; margin-bottom: 8px;">
+                <div class="metric-label" style="margin-bottom: 2px;">TOTAL ATTRIBUTE POINTS</div>
+                <div class="metric-val" style="font-size: 16px;">{total_pts} PTS</div>
             </div>
-            ''', unsafe_allow_html=True)
+            <div class="status-card" style="padding: 10px; margin-bottom: 8px;">
+                <div class="metric-label" style="margin-bottom: 2px;">HIGHEST ATTRIBUTE</div>
+                <div class="metric-val" style="font-size: 16px; color: {highest_color};">{highest_display} (LVL {highest_lvl})</div>
+            </div>
+            <div class="status-card" style="padding: 10px; margin-bottom: 8px;">
+                <div class="metric-label" style="margin-bottom: 2px;">LOWEST ATTRIBUTE</div>
+                <div class="metric-val" style="font-size: 16px; color: {lowest_color};">{lowest_display} (LVL {lowest_lvl})</div>
+            </div>
+            <div class="status-card" style="padding: 10px; margin-bottom: 8px;">
+                <div class="metric-label" style="margin-bottom: 2px;">ATTRIBUTE BALANCE RATIO</div>
+                <div class="metric-val" style="font-size: 16px;">{balance_ratio:.1f}% CONVERGENCE</div>
+            </div>
+            <div class="status-card" style="padding: 10px; margin-bottom: 8px;">
+                <div class="metric-label" style="margin-bottom: 2px;">SYSTEM SYNC DATE</div>
+                <div class="metric-val" style="font-size: 16px;">{sync_date}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with stats_right:
+            st.markdown('<div style="font-size: 14px; font-weight: bold; color: #64748b; letter-spacing: 1px; margin-bottom: 10px;">DAILY EXP YIELD</div>', unsafe_allow_html=True)
+            gains = data.get("today_gains", {})
+            max_gain = max([gains.get(s, 0.0) for s in stats_engine.STATS] + [0.01])
+            
+            for stat in stats_engine.STATS:
+                gain = gains.get(stat, 0.0)
+                if gain < 0: 
+                    gain = 0.0 
+                color = STAT_COLORS.get(stat, primary_color)
+                display = STAT_DISPLAY_NAMES.get(stat, stat).upper()
+                pct = min(100, int((gain / max_gain) * 100))
+                
+                # Compacted Daily EXP bars
+                st.markdown(f'''
+                <div style="margin-bottom: 8px; background-color: {sec_bg}; padding: 10px; border-radius: 6px; border: 1px solid #1e293b;">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: {color}; margin-bottom: 4px;">
+                        <span>◈ {display}</span>
+                        <span>+{gain:.2f} EXP</span>
+                    </div>
+                    <div style="width: 100%; background-color: #111827; border-radius: 4px; height: 8px;">
+                        <div style="width: {pct}%; background-color: {color}; height: 100%; border-radius: 4px; box-shadow: 0 0 6px {color}80;"></div>
+                    </div>
+                </div>
+                ''', unsafe_allow_html=True)
