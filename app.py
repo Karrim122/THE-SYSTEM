@@ -67,68 +67,65 @@ st.markdown(f"""
     .sub-header {{ font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 15px; }}
     .level-badge {{ font-size: 42px; font-weight: 800; color: {primary_color}; text-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }}
     .rank-text {{ font-size: 16px; font-weight: bold; color: #f59e0b; }}
+    .stat-card {{ background-color: #111827; border-radius: 8px; padding: 14px; text-align: center; border: 1px solid #1e293b; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }}
     
-    /* Original Stat Card Design, restored exactly, plus a transition for hover */
-    .stat-card {{ 
-        background-color: #111827; 
-        border-radius: 8px; 
-        padding: 14px; 
-        text-align: center; 
-        border: 1px solid #1e293b; 
-        margin-bottom: 15px; 
-        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); 
-    }}
-    
-    /* Interactive Column Tricks using CSS :has() */
-    /* 1. Make the column itself act as the interactive area */
-    div[data-testid="column"]:has(.stat-card-wrapper) {{
+    /* Interactive Clickable Stat Card Container & Glow Animations */
+    .stat-card-container {{
         position: relative;
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        margin-bottom: 6px;
         cursor: pointer;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }}
-    div[data-testid="column"]:has(.stat-card-wrapper):hover {{
+    .stat-card-container:hover {{
         transform: translateY(-4px) scale(1.02);
     }}
-    div[data-testid="column"]:has(.stat-card-wrapper):active {{
+    .stat-card-container:active {{
         transform: translateY(-1px) scale(0.98);
     }}
 
-    /* 2. Stretch the Streamlit button to invisibly cover the entire column */
-    div[data-testid="column"]:has(.stat-card-wrapper) div.element-container:has(.stButton) {{
+    .interactive-card-discipline:hover .stat-card {{
+        box-shadow: 0 8px 25px rgba(244, 63, 94, 0.35), 0 0 15px rgba(244, 63, 94, 0.3);
+        border-color: #f43f5e;
+    }}
+    .interactive-card-deep-focus:hover .stat-card {{
+        box-shadow: 0 8px 25px rgba(168, 85, 247, 0.35), 0 0 15px rgba(168, 85, 247, 0.3);
+        border-color: #a855f7;
+    }}
+    .interactive-card-activity:hover .stat-card {{
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35), 0 0 15px rgba(16, 185, 129, 0.3);
+        border-color: #10b981;
+    }}
+    .interactive-card-intelligence:hover .stat-card {{
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35), 0 0 15px rgba(59, 130, 246, 0.3);
+        border-color: #3b82f6;
+    }}
+    .interactive-card-hacking:hover .stat-card {{
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.35), 0 0 15px rgba(245, 158, 11, 0.3);
+        border-color: #f59e0b;
+    }}
+
+    /* Seamless Overlay Button (Makes the Card Clickable without visible extra buttons) */
+    .stat-card-container div[data-testid="stButton"],
+    .stat-card-container div.stButton {{
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
         width: 100% !important;
         height: 100% !important;
-        z-index: 999 !important;
-        opacity: 0 !important; /* Fully invisible button overlay */
+        margin: 0 !important;
+        padding: 0 !important;
+        z-index: 10 !important;
     }}
-    div[data-testid="column"]:has(.stat-card-wrapper) div.element-container:has(.stButton) button {{
+    .stat-card-container div[data-testid="stButton"] > button,
+    .stat-card-container div.stButton > button {{
         width: 100% !important;
         height: 100% !important;
+        opacity: 0 !important;
+        background: transparent !important;
+        border: none !important;
         cursor: pointer !important;
-    }}
-
-    /* 3. Neon glow effects targeting the inner card when the column is hovered */
-    div[data-testid="column"]:has(.stat-discipline):hover .stat-card {{
-        box-shadow: 0 8px 25px rgba(244, 63, 94, 0.35), 0 0 15px rgba(244, 63, 94, 0.3);
-        border-color: #f43f5e;
-    }}
-    div[data-testid="column"]:has(.stat-deep-focus):hover .stat-card {{
-        box-shadow: 0 8px 25px rgba(168, 85, 247, 0.35), 0 0 15px rgba(168, 85, 247, 0.3);
-        border-color: #a855f7;
-    }}
-    div[data-testid="column"]:has(.stat-activity):hover .stat-card {{
-        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35), 0 0 15px rgba(16, 185, 129, 0.3);
-        border-color: #10b981;
-    }}
-    div[data-testid="column"]:has(.stat-intelligence):hover .stat-card {{
-        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35), 0 0 15px rgba(59, 130, 246, 0.3);
-        border-color: #3b82f6;
-    }}
-    div[data-testid="column"]:has(.stat-hacking):hover .stat-card {{
-        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.35), 0 0 15px rgba(245, 158, 11, 0.3);
-        border-color: #f59e0b;
+        padding: 0 !important;
+        margin: 0 !important;
     }}
 
     /* Vertical Control Panel Divider */
@@ -301,27 +298,24 @@ def render_stat_card(stat_name):
     except AttributeError:
         stat_rank = f"{rank_title}"
 
-    stat_class = f"stat-{stat_name.lower().replace(' ', '-')}"
+    stat_class = f"interactive-card-{stat_name.lower().replace(' ', '-')}"
 
-    # Render the card visuals
     st.markdown(f"""
-    <div class="stat-card-wrapper {stat_class}">
+    <div class="stat-card-container {stat_class}">
         <div class="stat-card" style="border-top: 3px solid {color};">
             <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
             <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
             <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
         </div>
-    </div>
     """, unsafe_allow_html=True)
-    
-    st.progress(min(1.0, max(0.0, float(entry["progress"]))))
 
-    # Invisible overlay button to make the entire column block clickable
-    if st.button(" ", key=f"btn_card_{stat_name}", use_container_width=True):
+    if st.button("", key=f"click_card_{stat_name}", use_container_width=True):
         st.session_state.selected_stat = stat_name
         st.session_state.view_mode = "STAT_LEDGER"
         st.rerun()
 
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.progress(min(1.0, max(0.0, float(entry["progress"]))))
 
 if view_mode == "🏠 HUD":
     col1, col2 = st.columns([3, 1])
@@ -343,24 +337,24 @@ if view_mode == "🏠 HUD":
     main_grid, right_panel = st.columns([5.2, 0.8])
 
     with main_grid:
-        # Row 1: Discipline, Deep Focus
+        # Row 1: Discipline, Deep Focus (narrowed using spacer columns)
         spacer_l1, r1_col1, r1_col2, spacer_r1 = st.columns([1, 2.5, 2.5, 1])
         with r1_col1:
             render_stat_card("Discipline")
         with r1_col2:
             render_stat_card("Deep Focus")
 
-        # Row 2: Career (Hacking)
+        # Row 2: Career (Hacking) in the middle (narrowed using spacer columns)
         spacer_l2, r2_col2, spacer_r2 = st.columns([2.25, 2.5, 2.25])
         with r2_col2:
-            render_stat_card("Hacking")
+            render_stat_card("Hacking")  # Displays as "Career"
 
-        # Row 3: Intelligence, Physical (Activity)
+        # Row 3: Intelligence, Physical (Activity) (narrowed using spacer columns)
         spacer_l3, r3_col1, r3_col2, spacer_r3 = st.columns([1, 2.5, 2.5, 1])
         with r3_col1:
             render_stat_card("Intelligence")
         with r3_col2:
-            render_stat_card("Activity")
+            render_stat_card("Activity")  # Displays as "Physical"
 
     with right_panel:
         st.markdown('<div class="right-panel-container">', unsafe_allow_html=True)
