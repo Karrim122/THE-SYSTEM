@@ -68,25 +68,27 @@ st.markdown(f"""
     .level-badge {{ font-size: 42px; font-weight: 800; color: {primary_color}; text-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }}
     .rank-text {{ font-size: 16px; font-weight: bold; color: #f59e0b; }}
     
-    /* Interactive Clickable Stat Blocks */
-    .stat-card-wrapper {{
-        background-color: #111827;
-        border-radius: 8px;
-        padding: 14px;
-        text-align: center;
-        border: 1px solid #1e293b;
-        margin-bottom: 5px;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
+    /* Make Streamlit buttons act as full interactive stat cards */
+    div.stButton > button[key^="card_"] {{
+        width: 100%;
+        height: auto;
+        background-color: #111827 !important;
+        border-radius: 8px !important;
+        padding: 16px !important;
+        text-align: center !important;
+        border: 1px solid #1e293b !important;
+        margin-bottom: 0px !important;
+        box-shadow: none !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }}
-    .stat-card-wrapper:hover {{
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(0, 210, 255, 0.15);
-        border-color: {primary_color};
-        background-color: #151c2e;
+    div.stButton > button[key^="card_"]:hover {{
+        transform: translateY(-3px) !important;
+        box-shadow: 0 6px 20px rgba(0, 210, 255, 0.15) !important;
+        border-color: {primary_color} !important;
+        background-color: #151c2e !important;
     }}
-    .stat-card-wrapper:active {{
-        transform: translateY(-1px);
+    div.stButton > button[key^="card_"]:active {{
+        transform: translateY(-1px) !important;
     }}
     
     /* Vertical Control Panel Divider */
@@ -259,19 +261,15 @@ def render_stat_card(stat_name):
     except AttributeError:
         stat_rank = f"{rank_title}"
 
-    st.markdown(f"""
-    <div class="stat-card-wrapper" style="border-top: 3px solid {color};">
-        <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
-        <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
-        <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
-    </div>
-    """, unsafe_allow_html=True)
-    st.progress(min(1.0, max(0.0, float(entry["progress"]))))
+    # Render card inside a styled button to make the block itself clickable with animation
+    card_label = f"◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}\nLVL {stat_lvl:02d}\n[{stat_rank}]"
     
-    if st.button("Inspect ➔", key=f"btn_{stat_name}", use_container_width=True):
+    if st.button(card_label, key=f"card_{stat_name}", use_container_width=True):
         st.session_state.selected_stat = stat_name
         st.session_state.view_mode = "📜 LEDGER"
         st.rerun()
+        
+    st.progress(min(1.0, max(0.0, float(entry["progress"]))))
 
 if view_mode == "🏠 HUD":
     col1, col2 = st.columns([3, 1])
@@ -354,7 +352,6 @@ else:
         except AttributeError:
             m_list = getattr(milestones, "MILESTONES", {}).get(stat, [])
 
-        # Display milestones in a clean grid/list card format
         for lvl, title, desc in m_list:
             unlocked = curr_lvl >= lvl
             border_col = color if unlocked else "#1e293b"
@@ -379,7 +376,6 @@ else:
     elif view_mode == "📊 STATS":
         st.markdown('<div class="hud-header" style="margin-bottom: 10px;">[ SYSTEM OVERVIEW ]</div>', unsafe_allow_html=True)
 
-        # 2-column layout to prevent vertical scrolling
         stats_left, stats_right = st.columns([1, 1.2])
 
         with stats_left:
