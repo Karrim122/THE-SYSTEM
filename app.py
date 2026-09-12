@@ -106,6 +106,9 @@ if "last_sync_timestamp" not in st.session_state:
 if "view_mode" not in st.session_state:
     st.session_state.view_mode = "🏠 HUD"
 
+if "active_ledger" not in st.session_state:
+    st.session_state.active_ledger = "Discipline"
+
 data = st.session_state.data
 
 # Initialize Daily Gains Tracking
@@ -237,13 +240,18 @@ def render_stat_card(stat_name):
         stat_rank = f"{rank_title}"
 
     st.markdown(f"""
-    <div class="stat-card" style="border-top: 3px solid {color};">
-        <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
-        <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
-        <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
+    <div class="stat-card" style="border-top: 3px solid {color}; margin-bottom: 8px; padding-bottom: 10px;">
+        <div style="color: {color}; font-weight: bold; font-size: 13px;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
+        <div style="font-size: 26px; font-weight: 900; color: {color}; margin-top: -2px;">LVL {stat_lvl:02d}</div>
+        <div style="font-size: 10px; color: #64748b; margin-bottom: 8px;">[{stat_rank}]</div>
     </div>
     """, unsafe_allow_html=True)
     st.progress(min(1.0, max(0.0, float(entry["progress"]))))
+    
+    if st.button(f"◈ ACCESS LEDGER", key=f"ledger_btn_{stat_name}", use_container_width=True):
+        st.session_state.active_ledger = stat_name
+        st.session_state.view_mode = "LEDGER"
+        st.rerun()
 
 if view_mode == "🏠 HUD":
     col1, col2 = st.columns([3, 1])
@@ -287,10 +295,6 @@ if view_mode == "🏠 HUD":
     with right_panel:
         st.markdown('<div class="right-panel-container">', unsafe_allow_html=True)
         st.markdown('<div style="font-size: 10px; color: #64748b; font-weight: bold; margin-bottom: 8px; text-align: center;">SYSTEM</div>', unsafe_allow_html=True)
-        
-        if st.button("📜 LEDGER", use_container_width=True):
-            st.session_state.view_mode = "📜 LEDGER"
-            st.rerun()
 
         if st.button("📊 STATS", use_container_width=True):
             st.session_state.view_mode = "📊 STATS"
@@ -306,20 +310,69 @@ else:
         st.session_state.view_mode = "🏠 HUD"
         st.rerun()
 
-    if view_mode == "📜 LEDGER":
-        st.markdown('<div class="hud-header">[ ABILITY LEDGER ]</div><br>', unsafe_allow_html=True)
-        for stat in stats_engine.STATS:
-            curr_lvl = int(data["stats"][stat]["level"])
-            st.markdown(f"#### ◈ {STAT_DISPLAY_NAMES.get(stat, stat).upper()} (Lv.{curr_lvl})")
+    if view_mode == "LEDGER":
+        stat = st.session_state.active_ledger
+        curr_lvl = int(data["stats"][stat]["level"])
+        color = STAT_COLORS.get(stat, primary_color)
+        display_name = STAT_DISPLAY_NAMES.get(stat, stat).upper()
+        
+        st.markdown(f'''
+        <div style="text-align: center; margin-bottom: 40px; padding: 25px; background: linear-gradient(180deg, {color}15 0%, transparent 100%); border-radius: 12px; border-top: 2px solid {color}50;">
+            <div style="font-size: 14px; font-weight: bold; color: #64748b; letter-spacing: 2px; margin-bottom: 5px;">ABILITY LEDGER</div>
+            <div style="font-size: 38px; font-weight: 900; color: {color}; text-shadow: 0 0 20px {color}60; letter-spacing: 2px; margin-bottom: 15px;">◈ {display_name}</div>
+            <div style="display: inline-block; background-color: {color}20; border: 1px solid {color}50; color: {color}; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: bold;">
+                CURRENT MASTERY: LEVEL {curr_lvl:02d}
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
+
+        try:
+            m_list = milestones.milestones_for(stat)
+        except AttributeError:
+            m_list = getattr(milestones, "MILESTONES", {}).get(stat, [])
             
-            try:
-                m_list = milestones.milestones_for(stat)
-            except AttributeError:
-                m_list = getattr(milestones, "MILESTONES", {}).get(stat, [])
-                
-            for lvl, title, desc in m_list:
-                unlocked = curr_lvl >= lvl
-                st.markdown(f"*{'✅' if unlocked else '🔒'}* **LV {lvl:02d} - {title.upper()}**: {desc}")
+        if not m_list:
+            st.markdown('<div style="text-align: center; color: #64748b; font-style: italic; margin-top: 20px;">No milestones recorded for this ability.</div>', unsafe_allow_html=True)
+            
+        for lvl, title, desc in m_list:
+            unlocked = curr_lvl >= lvl
+            
+            if unlocked:
+                bg = sec_bg
+                border_color = color
+                title_color = color
+                icon = "✦"
+                opacity = "1.0"
+                glow = f"box-shadow: 0 0 15px {color}15;"
+                status_text = "UNLOCKED"
+                status_color = color
+            else:
+                bg = "#030712"
+                border_color = "#1e293b"
+                title_color = "#475569"
+                icon = "🔒"
+                opacity = "0.7"
+                glow = ""
+                status_text = f"UNLOCKS AT LVL {lvl:02d}"
+                status_color = "#475569"
+
+            st.markdown(f'''
+            <div style="background-color: {bg}; border: 1px solid {border_color}; {glow} border-radius: 8px; padding: 20px; margin-bottom: 16px; opacity: {opacity}; transition: all 0.3s ease; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background-color: {border_color};"></div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; padding-left: 10px;">
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-size: 20px; color: {title_color}; margin-right: 14px;">{icon}</span>
+                        <span style="font-size: 16px; font-weight: 900; color: {text_color}; letter-spacing: 1px;">{title.upper()}</span>
+                    </div>
+                    <span style="font-size: 10px; font-weight: bold; color: {status_color}; background-color: {status_color}15; padding: 4px 10px; border-radius: 4px; border: 1px solid {status_color}30;">
+                        {status_text}
+                    </span>
+                </div>
+                <div style="padding-left: 44px; font-size: 13px; color: #94a3b8; line-height: 1.6;">
+                    {desc}
+                </div>
+            </div>
+            ''', unsafe_allow_html=True)
 
     elif view_mode == "📊 STATS":
         st.markdown('<div class="hud-header" style="margin-bottom: 10px;">[ SYSTEM OVERVIEW ]</div>', unsafe_allow_html=True)
