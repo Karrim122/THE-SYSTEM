@@ -108,6 +108,14 @@ if "view_mode" not in st.session_state:
 
 data = st.session_state.data
 
+# Initialize Daily Gains Tracking
+today_date_str = date.today().isoformat()
+if "today_date" not in data or data.get("today_date") != today_date_str:
+    data["today_date"] = today_date_str
+    data["today_gains"] = {s: 0.0 for s in stats_engine.STATS}
+elif "today_gains" not in data:
+    data["today_gains"] = {s: 0.0 for s in stats_engine.STATS}
+
 def execute_sync(force=False):
     current_time = time.time()
     if not force and (current_time - st.session_state.last_sync_timestamp < 300):
@@ -132,7 +140,7 @@ def execute_sync(force=False):
         todos = client.get_tasks("todos") + client.get_tasks("completedTodos")
 
         today_str = date.today().isoformat()
-
+        
         # Habits
         for task in habits:
             stat = stats_engine.match_stat_from_tags(task.get("tags"), tag_id_to_name)
@@ -147,12 +155,14 @@ def execute_sync(force=False):
             if new_up > 0:
                 inc = stats_engine.DIFFICULTY_INCREMENT[stats_engine.priority_to_difficulty(task.get("priority", 1))] * new_up
                 stats_engine.apply_progress(data["stats"], stat, inc, direction="up")
+                data["today_gains"][stat] = data.get("today_gains", {}).get(stat, 0.0) + inc
                 data_store.add_log(data, f"Action '{task.get('text','?')}' x{new_up} -> +{STAT_DISPLAY_NAMES.get(stat, stat)} EXP")
 
             new_down = max(0, counter_down - prev.get("counterDown", 0))
             if new_down > 0:
                 inc = stats_engine.DIFFICULTY_INCREMENT[stats_engine.priority_to_difficulty(task.get("priority", 1))] * new_down
                 stats_engine.apply_progress(data["stats"], stat, inc, direction="down")
+                data["today_gains"][stat] = data.get("today_gains", {}).get(stat, 0.0) - inc
                 data_store.add_log(data, f"Penalty '{task.get('text','?')}' x{new_down} -> -{STAT_DISPLAY_NAMES.get(stat, stat)} EXP")
 
             data["tasks"][task_id] = {"counterUp": counter_up, "counterDown": counter_down}
@@ -167,6 +177,7 @@ def execute_sync(force=False):
             if task.get("completed") and prev.get("lastCreditedDate") != today_str:
                 inc = stats_engine.DIFFICULTY_INCREMENT[stats_engine.priority_to_difficulty(task.get("priority", 1))]
                 stats_engine.apply_progress(data["stats"], stat, inc, direction="up")
+                data["today_gains"][stat] = data.get("today_gains", {}).get(stat, 0.0) + inc
                 data_store.add_log(data, f"Daily '{task.get('text','?')}' cleared -> +{STAT_DISPLAY_NAMES.get(stat, stat)} EXP")
                 prev["lastCreditedDate"] = today_str
             data["tasks"][task_id] = prev
@@ -181,6 +192,7 @@ def execute_sync(force=False):
             if task.get("completed") and not prev.get("credited", False):
                 inc = stats_engine.DIFFICULTY_INCREMENT[stats_engine.priority_to_difficulty(task.get("priority", 1))]
                 stats_engine.apply_progress(data["stats"], stat, inc, direction="up")
+                data["today_gains"][stat] = data.get("today_gains", {}).get(stat, 0.0) + inc
                 data_store.add_log(data, f"Quest '{task.get('text','?')}' cleared -> +{STAT_DISPLAY_NAMES.get(stat, stat)} EXP")
                 prev["credited"] = True
             data["tasks"][task_id] = prev
@@ -253,21 +265,24 @@ if view_mode == "🏠 HUD":
     main_grid, right_panel = st.columns([5.2, 0.8])
 
     with main_grid:
-        # Row 1: Discipline, Deep Focus, Career (Hacking)
-        r1_col1, r1_col2, r1_col3 = st.columns(3)
+        # Row 1: Discipline, Deep Focus
+        r1_col1, r1_col2 = st.columns(2)
         with r1_col1:
             render_stat_card("Discipline")
         with r1_col2:
             render_stat_card("Deep Focus")
-        with r1_col3:
+
+        # Row 2: Career (Hacking) in the middle
+        r2_col1, r2_col2, r2_col3 = st.columns([1, 2, 1])
+        with r2_col2:
             render_stat_card("Hacking")  # Displays as "Career"
 
-        # Row 2: Intelligence, Physical (Activity) in the middle under Deep Focus
-        r2_col1, r2_col2, r2_col3 = st.columns(3)
-        with r2_col1:
+        # Row 3: Intelligence, Physical (Activity)
+        r3_col1, r3_col2 = st.columns(2)
+        with r3_col1:
             render_stat_card("Intelligence")
-        with r2_col2:
-            render_stat_card("Activity")  # Displays as "Physical" in middle column
+        with r3_col2:
+            render_stat_card("Activity")  # Displays as "Physical"
 
     with right_panel:
         st.markdown('<div class="right-panel-container">', unsafe_allow_html=True)
@@ -346,3 +361,30 @@ else:
             <div class="metric-val">{sync_date}</div>
         </div>
         """, unsafe_allow_html=True)
+
+        # -- Today's Exp Visual Tracker Divider --
+        st.markdown("<hr style='border: 1px solid #1e293b; margin: 30px 0;'>", unsafe_allow_html=True)
+        st.markdown('<div class="hud-header">[ DAILY EXP YIELD ]</div><br>', unsafe_allow_html=True)
+
+        gains = data.get("today_gains", {})
+        max_gain = max([gains.get(s, 0.0) for s in stats_engine.STATS] + [0.01])
+        
+        for stat in stats_engine.STATS:
+            gain = gains.get(stat, 0.0)
+            if gain < 0: 
+                gain = 0.0  # Floor visual tracking at 0 for aesthetics
+            color = STAT_COLORS.get(stat, primary_color)
+            display = STAT_DISPLAY_NAMES.get(stat, stat).upper()
+            pct = min(100, int((gain / max_gain) * 100))
+            
+            st.markdown(f'''
+            <div style="margin-bottom: 12px; background-color: {sec_bg}; padding: 12px; border-radius: 6px; border: 1px solid #1e293b;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: {color}; margin-bottom: 6px;">
+                    <span>◈ {display}</span>
+                    <span>+{gain:.2f} EXP</span>
+                </div>
+                <div style="width: 100%; background-color: #111827; border-radius: 4px; height: 10px;">
+                    <div style="width: {pct}%; background-color: {color}; height: 100%; border-radius: 4px; box-shadow: 0 0 8px {color}80;"></div>
+                </div>
+            </div>
+            ''', unsafe_allow_html=True)
