@@ -69,10 +69,10 @@ def is_missed_daily(task_data):
 
 def process_habitica_event(stats_block, task_data, tag_id_to_name, direction="up"):
     tag_ids = task_data.get("tags", [])
-    stat_name = match_stat_from_tags(tag_ids, tag_id_to_name)
+    stat_names = match_stats_from_tags(tag_ids, tag_id_to_name)
 
-    if not stat_name:
-        return None, 0
+    if not stat_names:
+        return {}
 
     priority = task_data.get("priority", 1)
     difficulty = priority_to_difficulty(priority)
@@ -83,46 +83,68 @@ def process_habitica_event(stats_block, task_data, tag_id_to_name, direction="up
     else:
         event_direction = task_data.get("direction", direction)
 
-    level_change = apply_progress(
-        stats_block=stats_block,
-        stat_name=stat_name,
-        increment=increment,
-        direction=event_direction,
-    )
+    changes = {}
+    for stat_name in stat_names:
+        level_change = apply_progress(
+            stats_The modified `stats_engine.py` script now collects all valid tags on a task and applies the increment or decrement logic to every matched stat[cite: 1]. 
 
-    return stat_name, level_change
+**Key Changes**
+* `match_stats_from_tags` replaces `match_stat_from_tags` to return a `list` of all unique matched stats instead of stopping at the first match[cite: 1].
+* `process_habitica_event` iterates over all matched stats and returns a dictionary of `{stat_name: level_change}` pairs instead of a single `(stat_name, level_change)` tuple[cite: 1].
+* `process_daily_misses` is updated to unpack the new dictionary format, appending a separate tuple to the `results` list for each modified stat[cite: 1].
 
-def process_daily_misses(stats_block, dailies, tag_id_to_name):
-    results = []
-    for task_data in dailies:
-        if not is_missed_daily(task_data):
-            continue
+**Required Updates in Your External Files**
+Because `process_habitica_event` now returns a dictionary of multiple stats instead of a single tuple, you will need to update the file that calls it (such as your CustomTkinter window or Streamlit dashboard backend). 
+* **Old format:** `stat_name, level_change = process_habitica_event(...)`
+* **New format:** `level_changes = process_habitica_event(...)` followed by a loop: `for stat_name, level_change in level_changes.items():`
 
-        stat_name, level_change = process_habitica_event(
-            stats_block=stats_block,
-            task_data=task_data,
-            tag_id_to_name=tag_id_to_name,
-        )
-        if stat_name:
-            results.append((task_data.get("id"), stat_name, level_change))
+**stats_engine.py**
+```python
+"""
+Core leveling logic for the Hunter Status Window.
+"""
 
-    return results
+STATS = ["Discipline", "Deep Focus", "Activity", "Intelligence", "Hacking"]
 
-def overall_level(stats_block):
-    total_weight = sum(WEIGHTS.values())
-    weighted_sum = sum(stats_block[s]["level"] * WEIGHTS[s] for s in STATS)
-    return round(weighted_sum / total_weight)
+WEIGHTS = {
+    "Discipline": 4,
+    "Deep Focus": 3,
+    "Activity": 1,
+    "Intelligence": 2,
+    "Hacking": 5,
+}
 
-def normalize_tag_name(name):
-    return " ".join(name.strip().lower().split())
+DIFFICULTY_INCREMENT = {
+    "trivial": 1 / 30,
+    "easy": 1 / 20,
+    "medium": 1 / 10,
+    "hard": 1 / 5,
+}
 
-def match_stat_from_tags(tag_ids, tag_id_to_name):
-    normalized_stats = {normalize_tag_name(s): s for s in STATS}
-    for tid in tag_ids or []:
-        name = tag_id_to_name.get(tid)
-        if not name:
-            continue
-        norm = normalize_tag_name(name)
-        if norm in normalized_stats:
-            return normalized_stats[norm]
-    return None
+PRIORITY_TO_DIFFICULTY = {
+    0.1: "trivial",
+    1: "easy",
+    1.5: "medium",
+    2: "hard",
+}
+
+def priority_to_difficulty(priority):
+    return PRIORITY_TO_DIFFICULTY.get(priority, "easy")
+
+def new_stat_block():
+    return {stat: {"level": 1, "progress": 0.0} for stat in STATS}
+
+def apply_progress(stats_block, stat_name, increment, direction="up"):
+    if stat_name not in stats_block:
+        return 0
+
+    entry = stats_block[stat_name]
+    level_change = 0
+    direction = str(direction).strip().lower()
+
+    if direction == "down":
+        entry["progress"] = round(entry["progress"] - increment, 6)
+        while entry["progress"] < 0.0:
+            if entry["level"] > 1:
+                entry["level"] -= 1
+                entry["progress"] = round(entry["progress"] + 1.0, 6
