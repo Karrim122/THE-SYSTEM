@@ -116,11 +116,6 @@ st.markdown(f"""
         position: relative;
         overflow: visible !important;
     }}
-    /* Streamlit wraps every element (the markdown card AND the button) in its own
-       child wrapper div. Since the button becomes position:absolute (removed from
-       flow), that wrapper collapses to 0 height - if it clips overflow, the button
-       gets hidden/unclickable even though the card underneath still shows hover
-       effects. Force every wrapper inside the card to stay visible/unclipped. */
     div[class*="st-key-stat_card_"] > div,
     div[class*="st-key-stat_card_"] [data-testid="stVerticalBlock"],
     div[class*="st-key-stat_card_"] [data-testid="element-container"],
@@ -229,8 +224,8 @@ def execute_sync(force=False):
         
         # Habits
         for task in habits:
-            stat = stats_engine.match_stat_from_tags(task.get("tags"), tag_id_to_name)
-            if not stat:
+            matched_stats = stats_engine.match_stats_from_tags(task.get("tags"), tag_id_to_name)
+            if not matched_stats:
                 continue
             task_id = task["id"]
             counter_up = task.get("counterUp", 0) or 0
@@ -240,46 +235,50 @@ def execute_sync(force=False):
             new_up = max(0, counter_up - prev.get("counterUp", 0))
             if new_up > 0:
                 inc = stats_engine.DIFFICULTY_INCREMENT[stats_engine.priority_to_difficulty(task.get("priority", 1))] * new_up
-                stats_engine.apply_progress(data["stats"], stat, inc, direction="up")
-                data["today_gains"][stat] = data.get("today_gains", {}).get(stat, 0.0) + inc
-                data_store.add_log(data, f"Action '{task.get('text','?')}' x{new_up} -> +{STAT_DISPLAY_NAMES.get(stat, stat)} EXP")
+                for stat in matched_stats:
+                    stats_engine.apply_progress(data["stats"], stat, inc, direction="up")
+                    data["today_gains"][stat] = data.get("today_gains", {}).get(stat, 0.0) + inc
+                    data_store.add_log(data, f"Action '{task.get('text','?')}' x{new_up} -> +{STAT_DISPLAY_NAMES.get(stat, stat)} EXP")
 
             new_down = max(0, counter_down - prev.get("counterDown", 0))
             if new_down > 0:
                 inc = stats_engine.DIFFICULTY_INCREMENT[stats_engine.priority_to_difficulty(task.get("priority", 1))] * new_down
-                stats_engine.apply_progress(data["stats"], stat, inc, direction="down")
-                data["today_gains"][stat] = data.get("today_gains", {}).get(stat, 0.0) - inc
-                data_store.add_log(data, f"Penalty '{task.get('text','?')}' x{new_down} -> -{STAT_DISPLAY_NAMES.get(stat, stat)} EXP")
+                for stat in matched_stats:
+                    stats_engine.apply_progress(data["stats"], stat, inc, direction="down")
+                    data["today_gains"][stat] = data.get("today_gains", {}).get(stat, 0.0) - inc
+                    data_store.add_log(data, f"Penalty '{task.get('text','?')}' x{new_down} -> -{STAT_DISPLAY_NAMES.get(stat, stat)} EXP")
 
             data["tasks"][task_id] = {"counterUp": counter_up, "counterDown": counter_down}
 
         # Dailies
         for task in dailies:
-            stat = stats_engine.match_stat_from_tags(task.get("tags"), tag_id_to_name)
-            if not stat:
+            matched_stats = stats_engine.match_stats_from_tags(task.get("tags"), tag_id_to_name)
+            if not matched_stats:
                 continue
             task_id = task["id"]
             prev = data["tasks"].get(task_id, {})
             if task.get("completed") and prev.get("lastCreditedDate") != today_str:
                 inc = stats_engine.DIFFICULTY_INCREMENT[stats_engine.priority_to_difficulty(task.get("priority", 1))]
-                stats_engine.apply_progress(data["stats"], stat, inc, direction="up")
-                data["today_gains"][stat] = data.get("today_gains", {}).get(stat, 0.0) + inc
-                data_store.add_log(data, f"Daily '{task.get('text','?')}' cleared -> +{STAT_DISPLAY_NAMES.get(stat, stat)} EXP")
+                for stat in matched_stats:
+                    stats_engine.apply_progress(data["stats"], stat, inc, direction="up")
+                    data["today_gains"][stat] = data.get("today_gains", {}).get(stat, 0.0) + inc
+                    data_store.add_log(data, f"Daily '{task.get('text','?')}' cleared -> +{STAT_DISPLAY_NAMES.get(stat, stat)} EXP")
                 prev["lastCreditedDate"] = today_str
             data["tasks"][task_id] = prev
 
         # Todos
         for task in todos:
-            stat = stats_engine.match_stat_from_tags(task.get("tags"), tag_id_to_name)
-            if not stat:
+            matched_stats = stats_engine.match_stats_from_tags(task.get("tags"), tag_id_to_name)
+            if not matched_stats:
                 continue
             task_id = task["id"]
             prev = data["tasks"].get(task_id, {})
             if task.get("completed") and not prev.get("credited", False):
                 inc = stats_engine.DIFFICULTY_INCREMENT[stats_engine.priority_to_difficulty(task.get("priority", 1))]
-                stats_engine.apply_progress(data["stats"], stat, inc, direction="up")
-                data["today_gains"][stat] = data.get("today_gains", {}).get(stat, 0.0) + inc
-                data_store.add_log(data, f"Quest '{task.get('text','?')}' cleared -> +{STAT_DISPLAY_NAMES.get(stat, stat)} EXP")
+                for stat in matched_stats:
+                    stats_engine.apply_progress(data["stats"], stat, inc, direction="up")
+                    data["today_gains"][stat] = data.get("today_gains", {}).get(stat, 0.0) + inc
+                    data_store.add_log(data, f"Quest '{task.get('text','?')}' cleared -> +{STAT_DISPLAY_NAMES.get(stat, stat)} EXP")
                 prev["credited"] = True
             data["tasks"][task_id] = prev
 
