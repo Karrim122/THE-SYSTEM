@@ -73,7 +73,7 @@ st.markdown(f"""
     .stat-card-container {{
         position: relative;
         margin-bottom: 6px;
-        pointer-events: none; /* Passes clicks directly through to button overlay */
+        pointer-events: none;
         transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }}
     
@@ -105,7 +105,7 @@ st.markdown(f"""
         border-color: #f59e0b;
     }}
 
-    /* Seamless Overlay Button (Makes the whole card full-target clickable) */
+    /* Seamless Overlay Button */
     div[class*="st-key-stat_card_"] {{
         position: relative !important;
     }}
@@ -339,8 +339,8 @@ if view_mode == "🏠 HUD":
     st.progress(max(0.0, min(1.0, hp / max_hp)) if max_hp > 0 else 0)
     st.markdown("---")
 
-    # Main Grid Layout with Right Separator Column for Buttons
-    main_grid, right_panel = st.columns([5.2, 0.8])
+    # Adjusted ratio to give the right panel slightly more room for button titles
+    main_grid, right_panel = st.columns([4.8, 1.2])
 
     with main_grid:
         spacer_l1, r1_col1, r1_col2, spacer_r1 = st.columns([1, 2.5, 2.5, 1])
@@ -368,6 +368,23 @@ if view_mode == "🏠 HUD":
 
         if st.button("🔄 SYNC", use_container_width=True):
             execute_sync(force=True)
+
+        st.markdown('<div style="font-size: 10px; color: #64748b; font-weight: bold; margin-top: 14px; margin-bottom: 8px; text-align: center;">STATS PAGE</div>', unsafe_allow_html=True)
+
+        # 5 Stat Navigation Buttons
+        stat_items = [
+            ("Discipline", "#f43f5e"),
+            ("Deep Focus", "#a855f7"),
+            ("Hacking", "#f59e0b"),
+            ("Intelligence", "#3b82f6"),
+            ("Activity", "#10b981")
+        ]
+
+        for internal_name, color in stat_items:
+            display_name = STAT_DISPLAY_NAMES.get(internal_name, internal_name).upper()
+            if st.button(f"◈ {display_name}", key=f"nav_btn_{internal_name}", use_container_width=True):
+                st.session_state.selected_stat = internal_name
+                st.session_state.view_mode = internal_name
             
         st.markdown('</div>', unsafe_allow_html=True)
 
