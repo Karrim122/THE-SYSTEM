@@ -30,7 +30,7 @@ st.markdown(f"""
     /* Hide Streamlit default sidebar completely */
     [data-testid="stSidebarNav"], [data-testid="collapsedControl"] {{ display: none !important; }}
     
-    /* Small Control Buttons */
+    /* Global Control Button Base */
     div.stButton > button {{
         width: 100%;
         background-color: {sec_bg};
@@ -67,61 +67,14 @@ st.markdown(f"""
     .sub-header {{ font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 15px; }}
     .level-badge {{ font-size: 42px; font-weight: 800; color: {primary_color}; text-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }}
     .rank-text {{ font-size: 16px; font-weight: bold; color: #f59e0b; }}
-    .stat-card {{ background-color: #111827; border-radius: 8px; padding: 14px; text-align: center; border: 1px solid #1e293b; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }}
     
-    /* Interactive Clickable Stat Card Container & Glow Animations */
-    .stat-card-container {{
-        position: relative;
-        margin-bottom: 6px;
-        pointer-events: none; /* Passes clicks directly through to button overlay */
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }}
-    
-    div[class*="st-key-stat_card_"]:hover .stat-card-container {{
-        transform: translateY(-4px) scale(1.02);
-    }}
-    div[class*="st-key-stat_card_"]:active .stat-card-container {{
-        transform: translateY(-1px) scale(0.98);
-    }}
-
-    div[class*="st-key-stat_card_"]:hover .interactive-card-discipline .stat-card {{
-        box-shadow: 0 8px 25px rgba(244, 63, 94, 0.35), 0 0 15px rgba(244, 63, 94, 0.3);
-        border-color: #f43f5e;
-    }}
-    div[class*="st-key-stat_card_"]:hover .interactive-card-deep-focus .stat-card {{
-        box-shadow: 0 8px 25px rgba(168, 85, 247, 0.35), 0 0 15px rgba(168, 85, 247, 0.3);
-        border-color: #a855f7;
-    }}
-    div[class*="st-key-stat_card_"]:hover .interactive-card-activity .stat-card {{
-        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35), 0 0 15px rgba(16, 185, 129, 0.3);
-        border-color: #10b981;
-    }}
-    div[class*="st-key-stat_card_"]:hover .interactive-card-intelligence .stat-card {{
-        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35), 0 0 15px rgba(59, 130, 246, 0.3);
-        border-color: #3b82f6;
-    }}
-    div[class*="st-key-stat_card_"]:hover .interactive-card-hacking .stat-card {{
-        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.35), 0 0 15px rgba(245, 158, 11, 0.3);
-        border-color: #f59e0b;
-    }}
-
-    /* Seamless Overlay Button (Makes the whole card full-target clickable) */
-    div[class*="st-key-stat_card_"] {{
-        position: relative !important;
-    }}
-    div[class*="st-key-stat_card_"] button {{
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        z-index: 99 !important;
-        opacity: 0 !important;
-        background: transparent !important;
-        border: none !important;
-        cursor: pointer !important;
-        margin: 0 !important;
-        padding: 0 !important;
+    .stat-card {{ 
+        background-color: #111827; 
+        border-radius: 8px 8px 0 0; 
+        padding: 14px; 
+        text-align: center; 
+        border-left: 1px solid #1e293b; 
+        border-right: 1px solid #1e293b;
     }}
 
     /* Vertical Control Panel Divider */
@@ -280,7 +233,7 @@ try:
 except AttributeError:
     rank_title = "E RANK"
 
-# Level Up & Rank Up Notification Logic
+# Level Up & Rank Up Notifications
 if "previous_overall_level" not in st.session_state:
     st.session_state.previous_overall_level = effective_overall
 elif effective_overall > st.session_state.previous_overall_level:
@@ -303,23 +256,21 @@ def render_stat_card(stat_name):
     except AttributeError:
         stat_rank = f"{rank_title}"
 
-    stat_class = f"interactive-card-{stat_name.lower().replace(' ', '-')}"
-    card_key = f"stat_card_{stat_name.lower().replace(' ', '_')}"
+    display_name = STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()
 
-    with st.container(key=card_key):
-        st.markdown(f"""
-        <div class="stat-card-container {stat_class}">
-            <div class="stat-card" style="border-top: 3px solid {color};">
-                <div style="color: {color}; font-weight: bold;">◈ {STAT_DISPLAY_NAMES.get(stat_name, stat_name).upper()}</div>
-                <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
-                <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    # Stat Card Visual Unit
+    st.markdown(f"""
+    <div class="stat-card" style="border-top: 3px solid {color};">
+        <div style="color: {color}; font-weight: bold;">◈ {display_name}</div>
+        <div style="font-size: 24px; font-weight: bold; color: {color};">LVL {stat_lvl:02d}</div>
+        <div style="font-size: 10px; color: #64748b;">[{stat_rank}]</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        if st.button("", key=f"click_card_{stat_name}", use_container_width=True):
-            st.session_state.selected_stat = stat_name
-            st.session_state.view_mode = stat_name
+    # Native Streamlit Action Button
+    if st.button(f"OPEN {display_name}", key=f"btn_nav_{stat_name}", use_container_width=True):
+        st.session_state.selected_stat = stat_name
+        st.session_state.view_mode = stat_name
 
     st.progress(min(1.0, max(0.0, float(entry["progress"]))))
 
@@ -339,7 +290,7 @@ if view_mode == "🏠 HUD":
     st.progress(max(0.0, min(1.0, hp / max_hp)) if max_hp > 0 else 0)
     st.markdown("---")
 
-    # Main Grid Layout with Right Separator Column for Buttons
+    # Main Grid Layout
     main_grid, right_panel = st.columns([5.2, 0.8])
 
     with main_grid:
