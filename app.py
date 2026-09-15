@@ -73,16 +73,10 @@ st.markdown(f"""
     .stat-card-container {{
         position: relative;
         margin-bottom: 6px;
-        cursor: pointer;
+        pointer-events: none; /* Passes clicks directly through to button overlay */
         transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }}
-    .stat-card-container:hover {{
-        transform: translateY(-4px) scale(1.02);
-    }}
-    .stat-card-container:active {{
-        transform: translateY(-1px) scale(0.98);
-    }}
-
+    
     div[class*="st-key-stat_card_"]:hover .stat-card-container {{
         transform: translateY(-4px) scale(1.02);
     }}
@@ -111,40 +105,23 @@ st.markdown(f"""
         border-color: #f59e0b;
     }}
 
-    /* Seamless Overlay Button (Makes the whole card clickable, with no visible extra button) */
+    /* Seamless Overlay Button (Makes the whole card full-target clickable) */
     div[class*="st-key-stat_card_"] {{
-        position: relative;
-        overflow: visible !important;
+        position: relative !important;
     }}
-    div[class*="st-key-stat_card_"] > div,
-    div[class*="st-key-stat_card_"] [data-testid="stVerticalBlock"],
-    div[class*="st-key-stat_card_"] [data-testid="element-container"],
-    div[class*="st-key-stat_card_"] [data-testid="stElementContainer"] {{
-        overflow: visible !important;
-    }}
-    div[class*="st-key-stat_card_"] div[data-testid="stButton"],
-    div[class*="st-key-stat_card_"] div.stButton {{
+    div[class*="st-key-stat_card_"] button {{
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
         width: 100% !important;
         height: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        z-index: 10 !important;
-        pointer-events: auto !important;
-    }}
-    div[class*="st-key-stat_card_"] div[data-testid="stButton"] > button,
-    div[class*="st-key-stat_card_"] div.stButton > button {{
-        width: 100% !important;
-        height: 100% !important;
+        z-index: 99 !important;
         opacity: 0 !important;
         background: transparent !important;
         border: none !important;
         cursor: pointer !important;
-        padding: 0 !important;
         margin: 0 !important;
-        pointer-events: auto !important;
+        padding: 0 !important;
     }}
 
     /* Vertical Control Panel Divider */
@@ -343,7 +320,6 @@ def render_stat_card(stat_name):
         if st.button("", key=f"click_card_{stat_name}", use_container_width=True):
             st.session_state.selected_stat = stat_name
             st.session_state.view_mode = stat_name
-            st.rerun()
 
     st.progress(min(1.0, max(0.0, float(entry["progress"]))))
 
@@ -367,19 +343,16 @@ if view_mode == "🏠 HUD":
     main_grid, right_panel = st.columns([5.2, 0.8])
 
     with main_grid:
-        # Row 1: Discipline, Deep Focus
         spacer_l1, r1_col1, r1_col2, spacer_r1 = st.columns([1, 2.5, 2.5, 1])
         with r1_col1:
             render_stat_card("Discipline")
         with r1_col2:
             render_stat_card("Deep Focus")
 
-        # Row 2: Career (Hacking)
         spacer_l2, r2_col2, spacer_r2 = st.columns([2.25, 2.5, 2.25])
         with r2_col2:
             render_stat_card("Hacking")
 
-        # Row 3: Intelligence, Physical (Activity)
         spacer_l3, r3_col1, r3_col2, spacer_r3 = st.columns([1, 2.5, 2.5, 1])
         with r3_col1:
             render_stat_card("Intelligence")
@@ -392,7 +365,6 @@ if view_mode == "🏠 HUD":
 
         if st.button("📊 STATS", use_container_width=True):
             st.session_state.view_mode = "📊 STATS"
-            st.rerun()
 
         if st.button("🔄 SYNC", use_container_width=True):
             execute_sync(force=True)
@@ -415,7 +387,6 @@ elif view_mode in STAT_COLORS or view_mode == "STAT_LEDGER":
     with col_back:
         if st.button("🔙 BACK TO HUD", use_container_width=True):
             st.session_state.view_mode = "🏠 HUD"
-            st.rerun()
 
     st.markdown(f"""
     <div style="border-left: 4px solid {stat_color}; background-color: {sec_bg}; padding: 20px; border-radius: 8px; margin-top: 15px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); border-top: 1px solid #1e293b; border-right: 1px solid #1e293b; border-bottom: 1px solid #1e293b;">
@@ -468,11 +439,9 @@ elif view_mode in STAT_COLORS or view_mode == "STAT_LEDGER":
 elif view_mode == "📊 STATS":
     if st.button("🔙 BACK TO HUD"):
         st.session_state.view_mode = "🏠 HUD"
-        st.rerun()
 
     st.markdown('<div class="hud-header" style="margin-bottom: 10px;">[ SYSTEM OVERVIEW ]</div>', unsafe_allow_html=True)
 
-    # 2-column layout to prevent vertical scrolling
     stats_left, stats_right = st.columns([1, 1.2])
 
     with stats_left:
