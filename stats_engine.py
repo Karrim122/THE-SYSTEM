@@ -29,6 +29,20 @@ PRIORITY_TO_DIFFICULTY = {
 def priority_to_difficulty(priority):
     return PRIORITY_TO_DIFFICULTY.get(priority, "easy")
 
+def get_missed_daily_penalty_difficulty(priority):
+    """
+    Returns custom penalty difficulty for missed dailies:
+    - Hard or Medium daily -> 'easy' loss
+    - Easy daily           -> 'medium' loss
+    - Trivial daily        -> 'trivial' loss (fallback)
+    """
+    base_diff = priority_to_difficulty(priority)
+    if base_diff in ["hard", "medium"]:
+        return "easy"
+    elif base_diff == "easy":
+        return "medium"
+    return base_diff
+
 def new_stat_block():
     return {stat: {"level": 1, "progress": 0.0} for stat in STATS}
 
@@ -83,19 +97,22 @@ def match_stats_from_tags(tag_ids, tag_id_to_name):
     return list(matched_stats)
 
 def process_habitica_event(stats_block, task_data, tag_id_to_name, direction="up"):
-    tag_ids = task_data.get("tags", [])
-    stat_names = match_stats_from_tags(tag_ids, tag_id_to_name)
-
-    if not stat_names:
-        return {}
-
     priority = task_data.get("priority", 1)
-    difficulty = priority_to_difficulty(priority)
-    increment = DIFFICULTY_INCREMENT[difficulty]
 
     if is_missed_daily(task_data):
+        # Force penalty target to Discipline, ignoring original tags
+        stat_names = ["Discipline"]
         event_direction = "down"
+        penalty_diff = get_missed_daily_penalty_difficulty(priority)
+        increment = DIFFICULTY_INCREMENT[penalty_diff]
     else:
+        tag_ids = task_data.get("tags", [])
+        stat_names = match_stats_from_tags(tag_ids, tag_id_to_name)
+        if not stat_names:
+            return {}
+        
+        difficulty = priority_to_difficulty(priority)
+        increment = DIFFICULTY_INCREMENT[difficulty]
         event_direction = task_data.get("direction", direction)
 
     level_changes = {}
